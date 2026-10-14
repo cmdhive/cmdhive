@@ -27,7 +27,7 @@ AIT updates itself: when a new version is out, an **Update** button appears in t
 ### On a Mac
 
 **[Download AIT for Mac](https://github.com/nwtaken/AIT/releases/latest/download/AIT-mac.zip)**
-(Apple silicon and Intel, macOS 11 or newer). Unzip it and drag **AIT** to Applications.
+(Apple silicon and Intel, macOS 12 or newer). Unzip it and drag **AIT** to Applications.
 
 AIT isn't signed with an Apple developer certificate, so the first time: right-click AIT →
 **Open** → **Open**. (On macOS 15, if that is not offered, open **System Settings → Privacy &
