@@ -5,6 +5,8 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -114,4 +116,17 @@ func shellArgv(kind string) []string {
 		sh = "/bin/zsh"
 	}
 	return []string{sh, "-l"}
+}
+
+// keychainHasClaude reports whether Claude Code has stored a login in the
+// Keychain for this config folder (it only looks the entry up; the secret is
+// never read). The main login uses "Claude Code-credentials"; another config
+// folder adds the first 8 hex digits of the SHA-256 of its path.
+func keychainHasClaude(home string, main bool) bool {
+	service := "Claude Code-credentials"
+	if !main {
+		sum := sha256.Sum256([]byte(home))
+		service += "-" + hex.EncodeToString(sum[:])[:8]
+	}
+	return exec.Command("security", "find-generic-password", "-s", service).Run() == nil
 }

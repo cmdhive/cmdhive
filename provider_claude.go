@@ -55,7 +55,12 @@ func (c *claude) stateFile(home string) string {
 }
 
 func (c *claude) SignedIn(home string) bool {
-	return fileExists(filepath.Join(home, ".credentials.json"))
+	if fileExists(filepath.Join(home, ".credentials.json")) {
+		return true
+	}
+	// On a Mac the login lives in the Keychain, not in a file; the account
+	// recorded in claude's state file is the other sign of it.
+	return keychainHasClaude(home, c.isMain(home)) || c.Email(home) != ""
 }
 
 func (c *claude) Email(home string) string {

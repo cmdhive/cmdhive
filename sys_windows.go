@@ -117,3 +117,6 @@ func shellArgv(kind string) []string {
 	}
 	return []string{"powershell.exe", "-NoLogo"}
 }
+
+// keychainHasClaude: Windows keeps Claude's login in a file, not a keychain.
+func keychainHasClaude(home string, main bool) bool { return false }
