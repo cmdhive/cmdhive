@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -29,6 +30,12 @@ func (g *gemini) PresetsID() bool     { return false }
 // folder first, then wherever the "gemini" command on PATH lives. The script
 // moved from dist/index.js to bundle/gemini.js in later versions.
 func (g *gemini) Command() []string {
+	if runtime.GOOS != "windows" {
+		if p := lookBinary("gemini", "/opt/homebrew/bin/gemini", "/usr/local/bin/gemini"); p != "" {
+			return []string{p}
+		}
+		return nil
+	}
 	cli := lookBinary("gemini")
 	if strings.EqualFold(filepath.Ext(cli), ".exe") {
 		return []string{cli}

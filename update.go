@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -47,10 +46,8 @@ var (
 )
 
 const (
-	installerAsset = "AIT-setup.exe"
-	checksumAsset  = "AIT-setup.exe.sha256"
-	checkEvery     = time.Hour
-	nudgeAfter     = 10 * time.Minute // a window focus re-checks once the last check is this old
+	checkEvery = time.Hour
+	nudgeAfter = 10 * time.Minute // a window focus re-checks once the last check is this old
 )
 
 type UpdateInfo struct {
@@ -159,8 +156,7 @@ func (a *App) InstallUpdate() error {
 	if err != nil {
 		return err
 	}
-	// /S: silent, the user already said yes. /RELAUNCH: start AIT again when done.
-	if err := exec.Command(path, "/S", "/RELAUNCH").Start(); err != nil {
+	if err := runUpdate(path, true); err != nil {
 		return err
 	}
 	a.allowQuit.Store(true)
@@ -206,7 +202,7 @@ func (a *App) prepareUpdate() (string, error) {
 	}
 	dir := filepath.Join(os.TempDir(), "AIT-update")
 	os.MkdirAll(dir, 0o755)
-	path := filepath.Join(dir, "AIT-setup-"+u.Latest+".exe")
+	path := filepath.Join(dir, updateFile(u.Latest))
 	if err := os.WriteFile(path, data, 0o755); err != nil {
 		return "", err
 	}
@@ -221,7 +217,7 @@ func (a *App) installOnExit() {
 	path := a.prepared
 	a.updMu.Unlock()
 	if path != "" && a.store.Config().AutoInstall && fileExists(path) {
-		exec.Command(path, "/S").Start()
+		runUpdate(path, false)
 	}
 }
 

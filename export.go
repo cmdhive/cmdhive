@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -48,4 +47,4 @@ func (a *App) ExportChat(id int) (string, error) {
 }
 
 // revealFile shows a file selected in Explorer.
-var revealFile = func(p string) { exec.Command("explorer.exe", "/select,", p).Start() }
+var revealFile = revealInFolder

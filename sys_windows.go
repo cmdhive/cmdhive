@@ -96,3 +96,24 @@ func clipboardFiles() []string {
 	}
 	return out
 }
+
+func openInEditor(p string)   { exec.Command("notepad.exe", p).Start() }
+func openFolder(p string)     { exec.Command("explorer.exe", p).Start() }
+func revealInFolder(p string) { exec.Command("explorer.exe", "/select,", p).Start() }
+
+const defaultFont = "Cascadia Mono"
+
+// shellProfiles are the plain shells offered next to the agents.
+func shellProfiles() []Profile {
+	return []Profile{{ID: "powershell", Name: "Windows PowerShell", Installed: true}, {ID: "cmd", Name: "Command Prompt", Installed: true}}
+}
+
+func shellArgv(kind string) []string {
+	if kind == "cmd" {
+		return []string{"cmd.exe"}
+	}
+	if p, err := exec.LookPath("pwsh.exe"); err == nil {
+		return []string{p, "-NoLogo"}
+	}
+	return []string{"powershell.exe", "-NoLogo"}
+}

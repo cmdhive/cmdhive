@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"time"
 )
@@ -183,8 +184,10 @@ func provider(id string) Provider {
 // shim routes arguments through cmd.exe, which mangles quoting), then tries
 // the given fallbacks.
 func lookBinary(name string, fallbacks ...string) string {
-	if p, err := exec.LookPath(name + ".exe"); err == nil {
-		return p
+	if runtime.GOOS == "windows" {
+		if p, err := exec.LookPath(name + ".exe"); err == nil {
+			return p
+		}
 	}
 	for _, c := range fallbacks {
 		if c != "" && fileExists(c) {

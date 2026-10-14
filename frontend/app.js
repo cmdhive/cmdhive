@@ -62,7 +62,7 @@ async function openTab(profileId, extra = {}) {
   $("#panes").append(pane);
 
   const term = new Terminal({
-    fontFamily: `"${ui.fontFamily}", "Cascadia Mono", Consolas, "Segoe UI Symbol", monospace`,
+    fontFamily: `"${ui.fontFamily}", "Cascadia Mono", Menlo, Consolas, "Segoe UI Symbol", monospace`,
     fontSize: ui.fontSize,
     fontWeight: ui.fontWeight || 500,
     fontWeightBold: Math.min(700, (ui.fontWeight || 500) + 200),

@@ -116,7 +116,7 @@ func (a *App) browserInstall() {
 	if fileExists(a.store.browserCLI()) {
 		return
 	}
-	npm := lookBinary("npm.cmd", filepath.Join(os.Getenv("ProgramFiles"), "nodejs", "npm.cmd"))
+	npm := npmBinary()
 	if npm == "" || nodeBinary() == "" {
 		return
 	}
@@ -260,6 +260,15 @@ func (a *App) browserNote(format string, args ...any) {
 	fmt.Fprintf(f, "%s  %s\n", time.Now().Format("2006-01-02 15:04:05"), fmt.Sprintf(format, args...))
 }
 
+// browserTitle is the window's title (and its taskbar button's).
+func browserTitle(ai, page string) string {
+	t := "AIT Browser · " + ai
+	if page = strings.TrimSpace(page); page != "" && page != "about:blank" {
+		t = shorten(page, 60) + " — " + t
+	}
+	return t
+}
+
 // browserCloseView closes the browser's window but keeps the chat's log.
 func (a *App) browserCloseView(l *browserLog, why string) {
 	a.browserNote("window of %s closed: %s", l.key[:min(8, len(l.key))], why)
@@ -331,19 +340,8 @@ func (a *App) browserFrontHTTP(w http.ResponseWriter, r *http.Request) {
 	l.viewMu.Lock()
 	v := l.view
 	l.viewMu.Unlock()
-	if v != nil {
-		restored := make(chan bool, 1)
-		uiPost(func() {
-			iconic, _, _ := procIsIconic.Call(v.hwnd)
-			if iconic != 0 {
-				const swShowNoActivate = 4
-				procShowWindow.Call(v.hwnd, swShowNoActivate)
-			}
-			restored <- iconic != 0
-		})
-		if <-restored {
-			time.Sleep(500 * time.Millisecond) // the page starts drawing again
-		}
+	if v != nil && restoreBrowserView(v) {
+		time.Sleep(500 * time.Millisecond) // the page starts drawing again
 	}
 	fmt.Fprint(w, "ok")
 }

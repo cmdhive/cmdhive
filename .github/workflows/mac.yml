@@ -1,0 +1,54 @@
+# Builds the Mac app for a release and attaches it (AIT-mac.zip + its SHA-256).
+# Runs when scripts/release.sh publishes a release; can also be started by hand
+# for an existing tag (Actions -> Mac app -> Run workflow).
+name: Mac app
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to build and attach to (e.g. v1.6.0); empty = a test build of this branch, kept as a workflow artifact"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  mac:
+    runs-on: macos-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Tests
+        run: go test ./...
+      - name: Build
+        run: |
+          go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
+          VERSION="${TAG#v}"
+          VERSION="${VERSION:-0.0.0-test}"
+          "$(go env GOPATH)/bin/wails" build -s -trimpath -platform darwin/universal -ldflags "-X main.Version=$VERSION"
+          # Not signed with a developer certificate: an ad-hoc signature is what lets Apple silicon run it at all.
+          codesign --force --deep --sign - build/bin/AIT.app
+      - name: Package
+        run: |
+          ditto -c -k --keepParent build/bin/AIT.app AIT-mac.zip
+          shasum -a 256 AIT-mac.zip | cut -d' ' -f1 > AIT-mac.zip.sha256
+          cat AIT-mac.zip.sha256
+      - name: Attach to the release
+        if: env.TAG != ''
+        run: gh release upload "$TAG" AIT-mac.zip AIT-mac.zip.sha256 --clobber
+      - name: Keep the test build
+        if: env.TAG == ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: AIT-mac
+          path: AIT-mac.zip

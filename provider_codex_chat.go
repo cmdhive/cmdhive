@@ -238,9 +238,9 @@ type codexItem struct {
 	} `json:"commandActions"`
 }
 
-var psWrap = regexp.MustCompile(`(?is)^"?[^"]*\\(?:powershell|pwsh|cmd)(?:\.exe)?"?\s+(?:-NoProfile\s+)?(?:-Command|/c)\s+(.*)$`)
+var psWrap = regexp.MustCompile(`(?is)^"?[^"]*[\\/](?:powershell|pwsh|cmd|zsh|bash|sh)(?:\.exe)?"?\s+(?:-NoProfile\s+)?(?:-Command|-lc|-c|/c)\s+(.*)$`)
 
-// shownCommand strips the shell wrapper Codex adds on Windows.
+// shownCommand strips the shell wrapper Codex adds.
 func (it codexItem) shownCommand() string {
 	if len(it.Actions) == 1 && it.Actions[0].Command != "" {
 		return it.Actions[0].Command

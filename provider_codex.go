@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -30,6 +31,12 @@ func (c *codex) LoginArgs() []string { return []string{"login"} }
 // Command runs the npm launcher through node rather than the vendored exe:
 // the launcher sets the env vars codex uses to manage its own updates.
 func (c *codex) Command() []string {
+	if runtime.GOOS != "windows" { // the npm launcher is a script with a node shebang
+		if p := lookBinary("codex", "/opt/homebrew/bin/codex", "/usr/local/bin/codex"); p != "" {
+			return []string{p}
+		}
+		return nil
+	}
 	if d, err := os.UserConfigDir(); err == nil {
 		js := filepath.Join(d, "npm", "node_modules", "@openai", "codex", "bin", "codex.js")
 		if node, err := exec.LookPath("node.exe"); err == nil && fileExists(js) {

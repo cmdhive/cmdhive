@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -157,7 +158,7 @@ func (s *Store) Config() Config {
 		c.StartingDir = s.home
 	}
 	if c.FontFamily == "" {
-		c.FontFamily = "Cascadia Mono"
+		c.FontFamily = defaultFont
 	}
 	if c.FontSize <= 0 {
 		c.FontSize = 13
@@ -418,7 +419,7 @@ func (s *Store) firstRun() {
 		Args:           map[string][]string{"claude": {}, "codex": {}},
 		DefaultProfile: "claude",
 		StartingDir:    s.home,
-		FontFamily:     "Cascadia Mono",
+		FontFamily:     defaultFont,
 		FontSize:       13,
 	})
 }
@@ -427,6 +428,10 @@ func (s *Store) firstRun() {
 
 func junction(target, link string) {
 	if !fileExists(target) || fileExists(link) {
+		return
+	}
+	if runtime.GOOS != "windows" {
+		os.Symlink(target, link)
 		return
 	}
 	cmd := exec.Command("cmd.exe", "/c", "mklink", "/J", link, target)

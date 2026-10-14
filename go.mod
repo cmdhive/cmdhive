@@ -3,6 +3,7 @@ module ait
 go 1.27.1
 
 require (
+	github.com/creack/pty v1.1.24
 	github.com/energye/systray v1.0.3
 	github.com/wailsapp/go-webview2 v1.0.22
 	github.com/wailsapp/wails/v2 v2.15.0

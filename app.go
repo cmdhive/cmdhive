@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
-	"os/exec"
 	"regexp"
 	"strings"
 	"sync"
@@ -208,7 +207,7 @@ func (a *App) profiles() []Profile {
 		p := registry[id]
 		out = append(out, Profile{ID: id, Name: p.Name(), Agent: true, Chat: chatOf(p) != nil, Models: p.Models(), Installed: p.Command() != nil})
 	}
-	return append(out, Profile{ID: "powershell", Name: "Windows PowerShell", Installed: true}, Profile{ID: "cmd", Name: "Command Prompt", Installed: true})
+	return append(out, shellProfiles()...)
 }
 
 // secondLaunch brings the open window forward when AIT is started again.
@@ -545,7 +544,7 @@ func (a *App) AddAccount(profile string) (AccountView, error) {
 }
 
 func (a *App) OpenSettings() {
-	exec.Command("notepad.exe", a.store.configPath()).Start()
+	openInEditor(a.store.configPath())
 }
 
 // ---- agents ----------------------------------------------------------------
@@ -1027,16 +1026,6 @@ func (a *App) claimedByOthers(id int) map[string]bool {
 
 func (a *App) notice(t *Tab, text string) {
 	a.emit("tab:notice", t.id, text)
-}
-
-func shellArgv(kind string) []string {
-	if kind == "cmd" {
-		return []string{"cmd.exe"}
-	}
-	if p, err := exec.LookPath("pwsh.exe"); err == nil {
-		return []string{p, "-NoLogo"}
-	}
-	return []string{"powershell.exe", "-NoLogo"}
 }
 
 // baseEnv is the user's environment minus anything that would make an agent

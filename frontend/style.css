@@ -310,3 +310,10 @@ body:not(.ready) #bar { transform: translateY(-6px); }
 #mini .mn-m .sl-bar { width: 64px; }
 #mini .mn-m .chip { width: 40px; text-align: right; color: var(--muted); font-size: inherit; border: 0; padding: 0; background: none; }
 #mini .mn-act { margin-top: auto; }
+
+/* ---- macOS (mac.js sets the class) --------------------------------------- */
+.mac { --ui: -apple-system, "SF Pro Text", system-ui, sans-serif; }
+.mac #bar { padding-left: 82px; }                /* room for the traffic lights */
+.mac .caption { display: none; }
+.mac .mglyph { display: inline-flex; vertical-align: -0.12em; }
+.mac .mglyph svg { width: 1em; height: 1em; }

@@ -6,7 +6,7 @@
 
 :root {
   --fs: 14px;
-  --mono: "Cascadia Mono", Consolas, "Segoe UI Symbol", monospace;
+  --mono: "Cascadia Mono", Menlo, Consolas, "Segoe UI Symbol", monospace;
   --ok: #3fb950; --err: #f0524f; --warn: #e3b341;
   --code-bg: color-mix(in srgb, var(--text) 5%, var(--bg));
   --soft: color-mix(in srgb, var(--text) 7%, var(--bg));

@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -62,7 +61,7 @@ func memoryRules(dir string) string {
 
 // OpenMemory shows the shared memory folder in Explorer.
 func (a *App) OpenMemory() {
-	exec.Command("explorer.exe", a.store.ensureMemory()).Start()
+	openFolder(a.store.ensureMemory())
 }
 
 // PickMemoryFolder lets the user choose a different shared memory folder.

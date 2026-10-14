@@ -24,6 +24,20 @@ AIT updates itself: when a new version is out, an **Update** button appears in t
 > AIT isn't code-signed yet, so Windows SmartScreen may say it doesn't recognise the app the
 > first time. Choose **More info → Run anyway**. Every release lists its SHA-256 checksum.
 
+### On a Mac
+
+**[Download AIT for Mac](https://github.com/nwtaken/AIT/releases/latest/download/AIT-mac.zip)**
+(Apple silicon and Intel, macOS 11 or newer). Unzip it and drag **AIT** to Applications.
+
+AIT isn't signed with an Apple developer certificate, so the first time: right-click AIT →
+**Open** → **Open**. (On macOS 15, if that is not offered, open **System Settings → Privacy &
+Security** and choose **Open Anyway**.) After that it starts normally and updates itself.
+
+What differs from Windows: the AIs' browser opens in your own Google Chrome (or Edge, Brave,
+Chromium) instead of AIT's live window with the steps column; the steps and any question for
+you appear in the chat. There is no tray icon or tray panel; the Dock icon bounces and a
+notification appears instead. ⌘ takes the place of Ctrl in AIT's shortcuts.
+
 ### The AI tools
 
 AIT runs each AI's own command-line tool. On first start, the setup wizard installs the ones
@@ -115,7 +129,11 @@ Needs Go 1.27+, [Wails v2](https://wails.io) and, for the installer, [NSIS](http
 go test ./...                    # unit tests, including a fake-CLI account switch
 wails build -s -trimpath         # build/bin/AIT.exe
 wails build -s -trimpath -nsis   # also build/bin/AIT-amd64-installer.exe
+wails build -s -trimpath -platform darwin/universal   # on a Mac: build/bin/AIT.app
 ```
+
+The Mac app is built by GitHub Actions ([`mac.yml`](.github/workflows/mac.yml)) whenever a release
+is published, and attached to it as `AIT-mac.zip`.
 
 Releases are published with `scripts/release.sh <version> "<notes>"`.
 

@@ -1,3 +1,5 @@
+//go:build windows
+
 package main
 
 import (
@@ -352,15 +354,6 @@ func (a *App) createBrowserView(l *browserLog, dir string, temp bool) (*browserV
 	}
 	a.destroyBrowserView(v)
 	return nil, fmt.Errorf("the browser's debugging port did not open")
-}
-
-// browserTitle is the window's title (and its taskbar button's).
-func browserTitle(ai, page string) string {
-	t := "AIT Browser · " + ai
-	if page = strings.TrimSpace(page); page != "" && page != "about:blank" {
-		t = shorten(page, 60) + " — " + t
-	}
-	return t
 }
 
 // closeController closes a WebView2 controller (the library has no method
@@ -729,4 +722,19 @@ func (a *App) BrowserState(tabID int) map[string]any {
 		v.mu.Unlock()
 	}
 	return out
+}
+
+// restoreBrowserView brings a minimised window back without taking the
+// keyboard; it reports whether it was minimised.
+func restoreBrowserView(v *browserView) bool {
+	restored := make(chan bool, 1)
+	uiPost(func() {
+		iconic, _, _ := procIsIconic.Call(v.hwnd)
+		if iconic != 0 {
+			const swShowNoActivate = 4
+			procShowWindow.Call(v.hwnd, swShowNoActivate)
+		}
+		restored <- iconic != 0
+	})
+	return <-restored
 }

@@ -6,10 +6,13 @@ import (
 	"embed"
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/wailsapp/wails/v2"
+	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/options/mac"
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
 )
 
@@ -25,7 +28,7 @@ func main() {
 	app := NewApp(store)
 	allowForeground()
 
-	err = wails.Run(&options.App{
+	opts := &options.App{
 		Title:            "AIT",
 		Width:            1100,
 		Height:           680,
@@ -52,7 +55,19 @@ func main() {
 			WebviewIsTransparent: false,
 			WindowIsTranslucent:  false,
 		},
-	})
+	}
+	if runtime.GOOS == "darwin" {
+		// The Mac's own window buttons sit over AIT's tab bar; the Edit menu is
+		// what makes copy and paste work in the web view.
+		opts.Frameless = false
+		opts.Menu = menu.NewMenuFromItems(menu.AppMenu(), menu.EditMenu(), menu.WindowMenu())
+		opts.Mac = &mac.Options{
+			TitleBar:   mac.TitleBarHiddenInset(),
+			Appearance: mac.NSAppearanceNameDarkAqua,
+			About:      &mac.AboutInfo{Title: "AIT", Message: "Version " + Version},
+		}
+	}
+	err = wails.Run(opts)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "ait:", err)
 		os.Exit(1)

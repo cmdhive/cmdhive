@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"slices"
 	"strings"
 	"time"
@@ -27,6 +28,12 @@ func (c *claude) Command() []string {
 	npm := ""
 	if d, err := os.UserConfigDir(); err == nil {
 		npm = filepath.Join(d, "npm", "node_modules", "@anthropic-ai", "claude-code", "bin", "claude.exe")
+	}
+	if runtime.GOOS != "windows" {
+		if p := lookBinary("claude", filepath.Join(c.userHome, ".local", "bin", "claude"), filepath.Join(c.userHome, ".claude", "local", "claude"), "/opt/homebrew/bin/claude", "/usr/local/bin/claude"); p != "" {
+			return []string{p}
+		}
+		return nil
 	}
 	if p := lookBinary("claude", npm, filepath.Join(c.userHome, ".local", "bin", "claude.exe")); strings.EqualFold(filepath.Ext(p), ".exe") {
 		return []string{p}
