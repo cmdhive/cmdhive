@@ -4,12 +4,8 @@ package main
 
 /*
 #cgo LDFLAGS: -framework Cocoa
-#import <Cocoa/Cocoa.h>
-
-static int aitActive(void) { return [NSApp isActive] ? 1 : 0; }
-static void aitBounce(void) {
-	dispatch_async(dispatch_get_main_queue(), ^{ [NSApp requestUserAttention:NSInformationalRequest]; });
-}
+int aitActive(void);
+void aitBounce(void);
 */
 import "C"
 
