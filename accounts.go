@@ -116,8 +116,9 @@ func migrate(old, root string) {
 	}
 	p := filepath.Join(root, "config.json")
 	if b, err := os.ReadFile(p); err == nil {
-		from, _ := json.Marshal(old + `\`)
-		to, _ := json.Marshal(root + `\`)
+		sep := string(os.PathSeparator)
+		from, _ := json.Marshal(old + sep)
+		to, _ := json.Marshal(root + sep)
 		b = []byte(strings.ReplaceAll(string(b), strings.Trim(string(from), `"`), strings.Trim(string(to), `"`)))
 		os.WriteFile(p, b, 0o644)
 	}

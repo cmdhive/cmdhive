@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -409,6 +410,9 @@ func TestSavedRulesArePriority(t *testing.T) {
 // Gemini is found at the npm package's current script, and an extra
 // account's sign-in is read from the .gemini folder inside it.
 func TestGeminiLookupAndAccountFolder(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("the npm folder layout checked here is Windows'")
+	}
 	if lookBinary("node") == "" {
 		t.Skip("node not installed")
 	}
@@ -567,6 +571,7 @@ func TestNotificationRemembersTab(t *testing.T) {
 func TestExportChat(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("USERPROFILE", home)
+	t.Setenv("HOME", home)
 	revealFile = func(string) {}
 	store, _ := newStoreAt(t.TempDir(), t.TempDir())
 	app := NewApp(store)

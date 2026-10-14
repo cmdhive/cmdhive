@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -412,7 +413,11 @@ func TestHandoffContinuesOnNextAccount(t *testing.T) {
 }
 
 func TestPTYRunsAndExits(t *testing.T) {
-	p, err := StartPTY([]string{"cmd.exe", "/c", "echo ait-ok"}, "", os.Environ(), 80, 24, true)
+	argv := []string{"cmd.exe", "/c", "echo ait-ok"}
+	if runtime.GOOS != "windows" {
+		argv = []string{"/bin/sh", "-c", "echo ait-ok"}
+	}
+	p, err := StartPTY(argv, "", os.Environ(), 80, 24, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -703,11 +708,11 @@ func TestUpdaterVerifiesDownloads(t *testing.T) {
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/releases/latest"):
 			fmt.Fprintf(w, `{"tag_name":"v9.9.9","body":"notes","html_url":"%[3]s/%[2]s/releases/tag/v9.9.9","assets":[
-				{"name":"AIT-setup.exe","browser_download_url":"%[1]s/%[2]s/releases/download/v9.9.9/AIT-setup.exe","size":17},
-				{"name":"AIT-setup.exe.sha256","browser_download_url":"%[1]s/%[2]s/releases/download/v9.9.9/AIT-setup.exe.sha256"}]}`, assetHost, repoName, srv0)
+				{"name":"%[4]s","browser_download_url":"%[1]s/%[2]s/releases/download/v9.9.9/%[4]s","size":17},
+				{"name":"%[5]s","browser_download_url":"%[1]s/%[2]s/releases/download/v9.9.9/%[5]s"}]}`, assetHost, repoName, srv0, installerAsset, checksumAsset)
 		case strings.HasSuffix(r.URL.Path, ".sha256"):
 			fmt.Fprint(w, checksum)
-		case strings.HasSuffix(r.URL.Path, ".exe"):
+		case strings.HasSuffix(r.URL.Path, installerAsset):
 			w.Write(installer)
 		}
 	}))

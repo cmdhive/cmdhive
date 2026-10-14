@@ -409,6 +409,11 @@ func (c *claude) readChat(p string) (Chat, bool) {
 // projectKey matches how claude names a working directory under projects/:
 // every character that is not a letter or digit becomes '-'.
 func projectKey(dir string) string {
+	if runtime.GOOS != "windows" { // claude names the folder after the directory it really runs in
+		if real, err := filepath.EvalSymlinks(dir); err == nil {
+			dir = real
+		}
+	}
 	b := []byte(dir)
 	for i, c := range b {
 		if !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9') {

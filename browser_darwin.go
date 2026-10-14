@@ -116,7 +116,7 @@ func (a *App) destroyBrowserView(v *browserView) {
 	wasGone := v.gone
 	v.gone = true
 	v.mu.Unlock()
-	if !wasGone && v.cmd.Process != nil {
+	if !wasGone && v.cmd != nil && v.cmd.Process != nil {
 		syscall.Kill(-v.cmd.Process.Pid, syscall.SIGTERM)
 		time.AfterFunc(3*time.Second, func() { syscall.Kill(-v.cmd.Process.Pid, syscall.SIGKILL) })
 	}
