@@ -243,7 +243,7 @@ const assert = require("node:assert/strict");
     assert.equal(await page.evaluate(() => traySnapshot().ask || null), null, "a question is answered in the chat, not from the tray");
     await page.evaluate(() => { tabs.get(1).chat.asks.delete("9"); });
     // The AI's browser is a window of its own: the chat only gets a button that brings it forward,
-    // and AIT tells it its colours.
+    // and Cmdhive tells it its colours.
     const bw = await page.evaluate(async () => {
       const tab = tabs.get(1), c = tab.chat, out = {}, log = [];
       go.main.App.BrowserShow = async (...a) => log.push(["show", ...a]);
@@ -265,10 +265,10 @@ const assert = require("node:assert/strict");
     });
     assert.ok(bw.hiddenAtFirst && bw.shown && bw.hiddenAfter, "the chat's browser button shows while the AI has a browser window, and hides when it is closed");
     assert.deepEqual(bw.show, ["show", 1], "the button brings that chat's window forward");
-    assert.ok(bw.theme, "AIT sends the browser window its colours");
+    assert.ok(bw.theme, "Cmdhive sends the browser window its colours");
     assert.equal(bw.noShowAfter, 1, "a hidden button does nothing");
     // The browser window's right-hand column (frontend/browser.html): live-chat style steps, the page's
-    // address, questions with their own buttons, and navigation sent back to AIT.
+    // address, questions with their own buttons, and navigation sent back to Cmdhive.
     const col = await browser.newPage({ viewport: { width: 340, height: 700 } });
     col.on("pageerror", (e) => errors.push(e.message));
     await col.setContent(fs.readFileSync(path.join(frontend, "browser.html"), "utf8").replace("/*AIT_CSS*/", css)
@@ -287,14 +287,14 @@ const assert = require("node:assert/strict");
     assert.ok(rows.live && rows.status === "Open playwright.dev/docs/intro", "LIVE shows while the AI works, with what it is doing");
     assert.equal(rows.host + "|" + rows.title, "playwright.dev|Installation | Playwright", "the address bar shows the site and the title");
     assert.deepEqual(rows.steps, ["plan:I'll open the docs.", "do:Open playwright.dev/docs/intro", "error:Failed: element not found"], "the steps read like a live chat");
-    assert.equal(rows.accent, "#88c0d0", "the column takes AIT's colours");
+    assert.equal(rows.accent, "#88c0d0", "the column takes Cmdhive's colours");
     assert.ok(/private/i.test(rows.foot), "it says the browser is private");
     // A later update adds only the new steps.
     await col.evaluate((s) => update(s), state({ steps: [...state().steps, { seq: 4, kind: "do", text: "Take a screenshot" }], busy: false }));
     assert.equal(await col.locator(".bw-s").count(), 4, "new steps are added, not repeated");
     assert.ok(!(await col.locator(".bw-live.on").count()), "LIVE goes out when the AI stops");
     assert.equal(await col.locator(".bw-t span").textContent(), "Idle");
-    // Questions: a site and a hand-over, each with its own buttons, answered back to AIT.
+    // Questions: a site and a hand-over, each with its own buttons, answered back to Cmdhive.
     await col.evaluate((s) => update(s), state({ asks: [
       { req: "ait-browser-1", help: false, text: "example.org", always: true },
       { req: "ait-browser-help-2", help: true, text: "Please solve the CAPTCHA.", always: false, labels: { allow: "I'm done", deny: "Can't do it" } }] }));
@@ -303,7 +303,7 @@ const assert = require("node:assert/strict");
     await col.click('.bw-ask:nth-child(2) [data-d="allow"]');
     await col.click('.bw-ask [data-d="always"]');
     await col.click('[data-nav="back"]');
-    assert.deepEqual(await col.evaluate(() => posted), ["answer:ait-browser-help-2|allow", "answer:ait-browser-1|always", "nav:back"], "answers and navigation go back to AIT");
+    assert.deepEqual(await col.evaluate(() => posted), ["answer:ait-browser-help-2|allow", "answer:ait-browser-1|always", "nav:back"], "answers and navigation go back to Cmdhive");
     await col.close();
     await page.evaluate(() => Object.assign(go.main.App, { McpOff: async () => ["elevenlabs"], McpToggle: async (...a) => calls.push(["mcp", ...a]) }));
     await page.click(".c-mcp");
@@ -312,7 +312,7 @@ const assert = require("node:assert/strict");
     assert.equal(await page.locator(".mcp-row").count(), 3, "MCP list shows the AI's servers");
     assert.deepEqual(await page.locator(".mcp-cat").evaluateAll((els) => els.map((e) => e.firstChild.textContent)), ["Roblox", "Websites", "Other AIs"], "MCP servers are grouped by category, in order");
     assert.equal(await page.evaluate(() => document.querySelector(".mcp-cat").nextElementSibling.querySelector(".switch").dataset.name), "Roblox_Studio", "a server sits under its category");
-    assert.equal(await page.locator('.switch[data-name="elevenlabs"]').getAttribute("aria-checked"), "false", "a server switched off in AIT shows as off");
+    assert.equal(await page.locator('.switch[data-name="elevenlabs"]').getAttribute("aria-checked"), "false", "a server switched off in Cmdhive shows as off");
     await page.click('.switch[data-name="docs"]');
     assert.ok((await page.evaluate(() => calls)).some((c) => c[0] === "mcp" && c[2] === "docs" && c[3] === false), "a server can be switched off");
     const kept = await page.evaluate(async () => {
@@ -358,7 +358,7 @@ const assert = require("node:assert/strict");
       return out;
     });
     assert.deepEqual(fix.buttons, ["minecraft-mcp"], "only a server that does not work offers Fix");
-    assert.deepEqual(fix.call, [1, "minecraft-mcp", "failed", "Connection closed", "node mc.js"], "Fix asks AIT to fix that server");
+    assert.deepEqual(fix.call, [1, "minecraft-mcp", "failed", "Connection closed", "node mc.js"], "Fix asks Cmdhive to fix that server");
     assert.ok(fix.fixing === "Fixing minecraft-mcp" && fix.bar, "fixing shows a progress screen");
     assert.equal(fix.step, "Reinstall the server", "the fixing AI's steps show on it");
     assert.ok(fix.link === "https://example.com/login" && fix.opened[0] === fix.link, "a sign-in page opens in the browser, with its link shown");
@@ -581,14 +581,14 @@ const assert = require("node:assert/strict");
     await page.waitForFunction(() => installed !== null);
     assert.deepEqual(await page.evaluate(() => installed), ["codex"], "only the chosen tools install");
     assert.match(await page.locator(".su-agent:nth-child(2) .su-state").textContent(), /Installed/);
-    assert.match(await page.locator(".su-next").textContent(), /Start using AIT/);
+    assert.match(await page.locator(".su-next").textContent(), /Start using Cmdhive/);
     await page.click(".su-next");
     await page.evaluate(() => setupDone);
     // ---- device connector: the dropdown that shares memory between computers.
     await page.evaluate(() => {
       window.connected = null; window.forgot = null; window.renamed = null;
       const two = {
-        connected: true, folder: "~/OneDrive/AIT Memory", memory: "~/.claude/memory", error: "",
+        connected: true, folder: "~/OneDrive/Cmdhive Memory", memory: "~/.claude/memory", error: "",
         devices: [
           { id: "a", name: "Desktop", os: "Windows", this: true, online: true, seen: "this device", memories: 42, folder: "" },
           { id: "b", name: "Kaya's MacBook", os: "Mac", this: false, online: true, seen: "active now", memories: 18, folder: "from-kayas-macbook" },
@@ -612,9 +612,9 @@ const assert = require("node:assert/strict");
     assert.match(await page.locator("#menu .mi >> nth=0").textContent(), /Desktop.*Windows.*this device.*42 memories/s, "the dropdown shows this device");
     assert.match(await page.locator("#menu .mi >> nth=1").textContent(), /Connect a device/, "and offers connecting another");
     await page.click("#menu .mi >> nth=1");
-    assert.match(await page.locator("#menu .mi >> nth=0").textContent(), /OneDrive.*~\/OneDrive/s, "a synced drive AIT found is one click");
+    assert.match(await page.locator("#menu .mi >> nth=0").textContent(), /OneDrive.*~\/OneDrive/s, "a synced drive Cmdhive found is one click");
     await page.click("#menu .mi >> nth=0");
-    assert.equal(await page.evaluate(() => connected), "C:/Users/k/OneDrive", "the chosen folder is what AIT connects");
+    assert.equal(await page.evaluate(() => connected), "C:/Users/k/OneDrive", "the chosen folder is what Cmdhive connects");
     assert.equal(await page.locator("#dev .count").textContent(), "2", "the button counts the devices");
     assert.ok(await page.locator("#dev.on").count(), "and shows it is connected");
 

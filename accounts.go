@@ -13,7 +13,7 @@ import (
 )
 
 // Account is one login to one agent. Dir is the agent's home for it; empty
-// means the agent's normal login (~/.claude, ~/.codex), which AIT reads
+// means the agent's normal login (~/.claude, ~/.codex), which Cmdhive reads
 // but never rewrites.
 type Account struct {
 	ID       string  `json:"id"`
@@ -25,7 +25,7 @@ type Account struct {
 
 func (a Account) provider() Provider { return provider(a.Provider) }
 
-// Config is config.json — the user's file. AIT writes it only to create it
+// Config is config.json — the user's file. Cmdhive writes it only to create it
 // and to add an account.
 type Config struct {
 	Accounts       []Account           `json:"accounts"`
@@ -40,7 +40,7 @@ type Config struct {
 	Prewarm        *bool               `json:"prewarm"`  // keep an agent started ahead of time (default on)
 	Review         bool                `json:"review"`   // /supereview: the AI may ask another AI to review its finished work
 	Notify         *bool               `json:"notify"`
-	ReopenTabs     *bool               `json:"reopenTabs"`  // reopen last time's tabs at start (default on, tabs.go)      // notify when the AI is done while AIT is in the background (default on)
+	ReopenTabs     *bool               `json:"reopenTabs"`  // reopen last time's tabs at start (default on, tabs.go)      // notify when the AI is done while Cmdhive is in the background (default on)
 	ChatView       string              `json:"chatView"`    // "native" | "terminal"
 	Permissions    string              `json:"permissions"` // "ask" | "edits" | "never"
 	Style          string              `json:"style"`       // "terminal" | "desktop"
@@ -52,9 +52,9 @@ type Config struct {
 	Access         string              `json:"access"`                 // "everywhere" (every drive) | "folder" (the working folder only)
 	AutoUpdate     *bool               `json:"autoUpdate"`             // check GitHub for new versions (default on)
 	MemoryDir      string              `json:"memoryDir"`              // shared memory folder; "" = automatic (memory.go)
-	AutoInstall    bool                `json:"autoInstall"`            // install a verified update when AIT closes
+	AutoInstall    bool                `json:"autoInstall"`            // install a verified update when Cmdhive closes
 	LastVersion    string              `json:"lastVersion"`            // the version that last ran (for "what's new")
-	McpOff         map[string][]string `json:"mcpOff,omitempty"`       // MCP servers switched off in AIT, per AI (mcp.go)
+	McpOff         map[string][]string `json:"mcpOff,omitempty"`       // MCP servers switched off in Cmdhive, per AI (mcp.go)
 	CrossAI        string              `json:"crossAI"`                // when every account is out: "switch" (default) | "ask" | "off"
 	AIOrder        []string            `json:"aiOrder"`                // order to try other AIs in
 	BrowserKeep    bool                `json:"browserKeep"`            // the AIs' browser keeps its sessions between runs (default: throwaway)
@@ -78,7 +78,7 @@ func (c Config) prewarm() bool    { return c.Prewarm == nil || *c.Prewarm }
 func (c Config) notify() bool     { return c.Notify == nil || *c.Notify }
 func (c Config) reopenTabs() bool { return c.ReopenTabs == nil || *c.ReopenTabs }
 
-// acctState is what AIT learned at runtime. It lives in state.json so it
+// acctState is what Cmdhive learned at runtime. It lives in state.json so it
 // never clobbers an edit the user has open in config.json.
 type acctState struct {
 	LimitedUntil int64  `json:"limitedUntil,omitempty"`
@@ -87,7 +87,7 @@ type acctState struct {
 }
 
 type Store struct {
-	root string // %APPDATA%\AIT
+	root string // %APPDATA%\AIT (dataFolder)
 	home string // user profile
 
 	mu    sync.Mutex
@@ -104,12 +104,17 @@ func NewStore() (*Store, error) {
 	if err != nil {
 		return nil, err
 	}
-	root := filepath.Join(base, "AIT")
+	root := filepath.Join(base, dataFolder)
 	migrate(filepath.Join(base, "Baton"), root)
 	return newStoreAt(root, home)
 }
 
-// migrate moves data from AIT's working name (Baton) once, rewriting the
+// dataFolder holds every login, account and chat Cmdhive keeps. It keeps the
+// name from when Cmdhive was AIT: renaming it would sign every user out and
+// lose their accounts. Users never see it.
+const dataFolder = "AIT"
+
+// migrate moves data from Cmdhive's working name (Baton) once, rewriting the
 // account folders recorded in config.json to the new location.
 func migrate(old, root string) {
 	if fileExists(root) || !fileExists(old) {

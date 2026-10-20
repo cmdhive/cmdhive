@@ -38,7 +38,7 @@ func (a *App) InstallAgents(ids []string) {
 		a.emit("install:progress", id, "installing", "")
 		err := installAgent(id)
 		if err == nil && p.Command() == nil {
-			err = errors.New("installed, but AIT can't find it yet; restart AIT")
+			err = errors.New("installed, but Cmdhive can't find it yet; restart Cmdhive")
 		}
 		if err != nil {
 			a.emit("install:progress", id, "failed", err.Error())
@@ -57,7 +57,7 @@ func installAgent(id string) error {
 	}
 	pkg := npmPackages[id]
 	if pkg == "" {
-		return fmt.Errorf("AIT can't install %s", id)
+		return fmt.Errorf("Cmdhive can't install %s", id)
 	}
 	npm, err := ensureNode()
 	if err != nil {
@@ -172,14 +172,14 @@ func npmBinary() string {
 	return lookBinary("npm.cmd", filepath.Join(os.Getenv("ProgramFiles"), "nodejs", "npm.cmd"))
 }
 
-// ownNodeDir is where AIT keeps a Node.js of its own on a Mac, for a Mac that
+// ownNodeDir is where Cmdhive keeps a Node.js of its own on a Mac, for a Mac that
 // has none: it needs no password and no Homebrew.
 func ownNodeDir() string {
 	d, _ := os.UserConfigDir()
-	return filepath.Join(d, "AIT", "node")
+	return filepath.Join(d, dataFolder, "node")
 }
 
-// ensureNodeMac returns npm, unpacking the official Node.js LTS into AIT's own
+// ensureNodeMac returns npm, unpacking the official Node.js LTS into Cmdhive's own
 // folder when the Mac has no Node.js (or one older than minNode).
 func ensureNodeMac() (string, error) {
 	npm := npmBinary()

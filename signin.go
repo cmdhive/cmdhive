@@ -13,7 +13,7 @@ import (
 
 // Signing an account in. Each AI has its own sign-in command: it opens the
 // browser, waits for the user to finish there, and saves the login in the
-// account's folder. AIT runs it against that folder and reports progress as
+// account's folder. Cmdhive runs it against that folder and reports progress as
 // "signin" events: {id, url} once the sign-in page is known, then
 // {id, done, ok, email, err}.
 
@@ -29,7 +29,7 @@ var signin struct {
 	kill func()
 }
 
-// CanSignIn reports whether provider p signs in from AIT's own dialog.
+// CanSignIn reports whether provider p signs in from Cmdhive's own dialog.
 func (a *App) CanSignIn(p string) bool {
 	prov := provider(p)
 	if prov == nil {

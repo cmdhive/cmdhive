@@ -25,7 +25,7 @@ func (a *App) ExportChat(id int) (string, error) {
 		return "", fmt.Errorf("nothing to export yet")
 	}
 	snap := &Tab{session: session, cwd: cwd}
-	text := conversationMarkdown(snap, agent, fmt.Sprintf("# Chat with %s\n\nExported from AIT on %s. Working folder: %s\n\n",
+	text := conversationMarkdown(snap, agent, fmt.Sprintf("# Chat with %s\n\nExported from Cmdhive on %s. Working folder: %s\n\n",
 		agent.Name(), time.Now().Format("2006-01-02 15:04"), maskUser(cwd)))
 	title := "chat" // the file is named after the first request
 	if _, rest, ok := strings.Cut(text, "## User\n\n"); ok {
@@ -38,7 +38,7 @@ func (a *App) ExportChat(id int) (string, error) {
 	home, _ := os.UserHomeDir()
 	dir := filepath.Join(home, "Downloads")
 	os.MkdirAll(dir, 0o755)
-	p := filepath.Join(dir, fmt.Sprintf("AIT - %s - %s.md", title, time.Now().Format("2006-01-02 15-04")))
+	p := filepath.Join(dir, fmt.Sprintf("Cmdhive - %s - %s.md", title, time.Now().Format("2006-01-02 15-04")))
 	if err := os.WriteFile(p, []byte(text), 0o644); err != nil {
 		return "", err
 	}

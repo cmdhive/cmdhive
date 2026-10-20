@@ -11,7 +11,7 @@ import (
 	"github.com/energye/systray"
 )
 
-// A real tray icon accepts AIT's notification (shows one on screen unless
+// A real tray icon accepts Cmdhive's notification (shows one on screen unless
 // Focus Assist holds it).
 func TestRealNotification(t *testing.T) {
 	if n := unsafe.Sizeof(notifyIconData{}); n != 976 {
@@ -25,7 +25,7 @@ func TestRealNotification(t *testing.T) {
 	<-ready
 	defer systray.Quit()
 	time.Sleep(500 * time.Millisecond)
-	if !showNotification("Claude finished", "AIT notification test — you can ignore this.") {
+	if !showNotification("Claude finished", "Cmdhive notification test — you can ignore this.") {
 		t.Fatal("Windows rejected the notification")
 	}
 	time.Sleep(3 * time.Second)

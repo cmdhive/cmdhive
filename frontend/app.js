@@ -4,7 +4,7 @@ const API = () => window.go.main.App;
 const RT = () => window.runtime;
 const $ = (s) => document.querySelector(s);
 
-// Icons per profile. An agent AIT has no icon for gets the generic spark,
+// Icons per profile. An agent Cmdhive has no icon for gets the generic spark,
 // so a new provider shows up correctly with no front-end change.
 const ICONS = {
   claude: '<svg viewBox="0 0 16 16"><g stroke="#d97757" stroke-width="1.9" stroke-linecap="round"><path d="M8 1.6v3.6M8 10.8v3.6M1.6 8h3.6M10.8 8h3.6M3.5 3.5l2.5 2.5M10 10l2.5 2.5M12.5 3.5 10 6M6 10l-2.5 2.5"/></g></svg>',
@@ -171,7 +171,7 @@ function send(tab, data) {
 
 // ---- predictive echo ---------------------------------------------------------
 // An agent's TUI takes 50-200ms to echo a keystroke on a small CPU (measured:
-// that is the agent redrawing, not AIT). So a typed character is drawn at
+// that is the agent redrawing, not Cmdhive). So a typed character is drawn at
 // the cursor at once, as mosh does, and dropped as soon as the real screen
 // shows it there — or after a moment if it never does.
 const PRED_TTL = 600;
@@ -254,7 +254,7 @@ function showVeil(tab, title, sub) {
 }
 
 // ---- native prompt cards ------------------------------------------------------
-// Agents' own set-up prompts are plain text screens. AIT recognises them and
+// Agents' own set-up prompts are plain text screens. Cmdhive recognises them and
 // shows a proper dialog instead, then answers the agent itself.
 
 const SHIELD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 2.8 4.5 5.6v5.6c0 4.6 3.1 8.6 7.5 10 4.4-1.4 7.5-5.4 7.5-10V5.6z"/><path d="m8.8 12 2.3 2.3 4.3-4.6" stroke-linecap="round"/></svg>';
@@ -271,7 +271,7 @@ function showTrustCard(tab, folder) {
     <div class="path"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M1.5 4.2c0-.8.6-1.4 1.4-1.4h3.3l1.5 1.6h5.4c.8 0 1.4.6 1.4 1.4v6.4c0 .8-.6 1.4-1.4 1.4H2.9c-.8 0-1.4-.6-1.4-1.4z" fill="#e3b341"/></svg><span></span></div>
     <p>${esc(name)} will be able to read, edit and run files here. Only trust folders whose contents you know.</p>
     <div class="actions"><button class="btn quiet" data-a="no">Exit <kbd>Esc</kbd></button><button class="btn go" data-a="yes">Trust folder <kbd>Enter</kbd></button></div>
-    <small>AIT remembers this, and won't ask again for this folder.</small>
+    <small>Cmdhive remembers this, and won't ask again for this folder.</small>
   </div>`;
   c.querySelector(".path span:last-child").textContent = folder || "this folder";
   c.querySelector('[data-a="yes"]').addEventListener("click", () => answerCard(tab, true));
@@ -366,7 +366,7 @@ async function closeTab(id, confirmed = false) {
   const tab = tabs.get(id);
   if (!tab) return;
   if (order.length === 1 && !confirmed) {
-    const ok = await ask("Close AIT?", tab.agent && !tab.exited
+    const ok = await ask("Close Cmdhive?", tab.agent && !tab.exited
       ? `This is the last tab, and ${profile(tab.profile).name} is still running in it. You can pick the conversation up again from History.`
       : "This is the last tab.");
     if (!ok) {
@@ -577,7 +577,7 @@ async function updateChrome() {
   btn.classList.toggle("limited", cur.status === "limited");
   btn.classList.toggle("out", cur.status === "signed out");
   const free = list.filter((a) => a.status === "ready").length;
-  btn.title = `${cur.label} · ${free} of ${list.length} account${list.length === 1 ? "" : "s"} ready — AIT moves to the next one by itself when this one runs out`;
+  btn.title = `${cur.label} · ${free} of ${list.length} account${list.length === 1 ? "" : "s"} ready — Cmdhive moves to the next one by itself when this one runs out`;
   if (tab.native) {
     const c = tab.chat;
     tab.account = cur.label;
@@ -652,7 +652,7 @@ async function accountMenu() {
   const tab = tabs.get(active);
   if (!tab) return;
   const list = await API().Accounts(tab.id);
-  const items = [{ header: tab.native ? "Accounts — when one runs out, AIT moves down this list" : `${profile(tab.profile).name} accounts — the next one takes over automatically` }];
+  const items = [{ header: tab.native ? "Accounts — when one runs out, Cmdhive moves down this list" : `${profile(tab.profile).name} accounts — the next one takes over automatically` }];
   for (const a of list) {
     const chip = a.status === "ready" ? (a.current ? "in use" : "ready") : a.detail || a.status;
     items.push({
@@ -684,7 +684,7 @@ function addAccountMenu(tab) {
       cls: p.installed ? "" : "dim",
       html: `<span class="icon">${icon(p.id)}</span><span class="label">${esc(p.name)}<span class="sub">${p.installed ? (p.chat ? "sign in through your browser" : "sign in in a new tab") : "not installed — click for how"}</span></span>`,
       run: async () => {
-        if (!p.installed) { toast(`Install ${p.name} first, then restart AIT:  ${INSTALL_HINT[p.id] || ""}`, 7000); return; }
+        if (!p.installed) { toast(`Install ${p.name} first, then restart Cmdhive:  ${INSTALL_HINT[p.id] || ""}`, 7000); return; }
         try { signIn(tab, await API().AddAccount(p.id), true); } catch (err) { toast(String(err)); }
       },
     });
@@ -693,8 +693,8 @@ function addAccountMenu(tab) {
 }
 
 // ---- device connector ------------------------------------------------------
-// Every computer running AIT can share one memory. The devices find each
-// other through a folder the user already syncs between them; AIT keeps each
+// Every computer running Cmdhive can share one memory. The devices find each
+// other through a folder the user already syncs between them; Cmdhive keeps each
 // device's memories separate inside it, so nothing is ever overwritten.
 
 let devices = { connected: false, devices: [], folder: "", error: "" };
@@ -759,7 +759,7 @@ async function deviceMenu() {
   showMenu($("#dev"), items, true);
 }
 
-// Connecting: pick a folder both computers can reach. AIT offers the synced
+// Connecting: pick a folder both computers can reach. Cmdhive offers the synced
 // drives it found, so for most people this is one click.
 async function connectMenu() {
   let folders = [];
@@ -774,7 +774,7 @@ async function connectMenu() {
   items.push({
     html: `<span class="icon">${GLYPH.folder}</span><span class="label">Choose a folder…<span class="sub">any synced folder, a network share or a USB stick</span></span>`,
     run: () => doConnect(""),
-  }, { header: "Then pick the same folder on your other computer. Memories stay in your own drive — AIT has no server." });
+  }, { header: "Then pick the same folder on your other computer. Memories stay in your own drive — Cmdhive has no server." });
   showMenu($("#dev"), items, true);
 }
 
@@ -788,7 +788,7 @@ async function doConnect(path) {
   const others = devices.devices.length - 1;
   toast(others > 0
     ? `Connected — ${others} other device${others === 1 ? "" : "s"} sharing memory.`
-    : `Ready. Now open AIT on your other computer and pick the same folder:  ${devices.folder}`, 10000);
+    : `Ready. Now open Cmdhive on your other computer and pick the same folder:  ${devices.folder}`, 10000);
 }
 
 async function renameDevice() {
@@ -840,10 +840,10 @@ function signState(state, detail) {
   const s = signing;
   $("#stitle").textContent = state === "ok" ? `${s.label} is signed in` : state === "fail" ? "Sign-in didn't finish" : `Sign in to ${s.label}`;
   $("#sbody").innerHTML = state === "ok"
-    ? `${detail ? esc(detail) + ". " : ""}AIT moves to it automatically when the account in use runs out.`
+    ? `${detail ? esc(detail) + ". " : ""}Cmdhive moves to it automatically when the account in use runs out.`
     : state === "fail"
       ? esc(detail || "The sign-in was closed before it finished.")
-      : `<span class="spin"></span> Your browser opened the sign-in page. Finish there and AIT picks it up right away.`;
+      : `<span class="spin"></span> Your browser opened the sign-in page. Finish there and Cmdhive picks it up right away.`;
   $("#slink").hidden = state !== "wait" || !s.url;
   $("#sno").textContent = state === "fail" ? "Close" : "Cancel";
   $("#sno").hidden = state === "ok";
@@ -897,8 +897,8 @@ function showUpdate(u) {
   const b = $("#update");
   b.querySelector(".upd-t").textContent = u.ready ? `${u.latest} ready` : `Update to ${u.latest}`;
   b.title = u.ready
-    ? `AIT ${u.latest} is downloaded and checked. It installs when you close AIT, or click to install now.`
-    : `AIT ${u.latest} is available (you have ${u.current}).`;
+    ? `Cmdhive ${u.latest} is downloaded and checked. It installs when you close Cmdhive, or click to install now.`
+    : `Cmdhive ${u.latest} is available (you have ${u.current}).`;
   b.classList.toggle("ready", !!u.ready);
   b.hidden = false;
 }
@@ -909,7 +909,7 @@ async function whatsNew() {
   if (!u || !u.available) return;
   const el = document.createElement("div");
   el.className = "whatsnew";
-  el.innerHTML = `<div class="wn-h"><span class="mdl">&#xE930;</span><b>Updated to AIT ${esc(u.latest)}</b><button class="wn-x"><span class="mdl">&#xE8BB;</span></button></div><div class="wn-b md-static"></div>`;
+  el.innerHTML = `<div class="wn-h"><span class="mdl">&#xE930;</span><b>Updated to Cmdhive ${esc(u.latest)}</b><button class="wn-x"><span class="mdl">&#xE8BB;</span></button></div><div class="wn-b md-static"></div>`;
   const body = { el: el.querySelector(".wn-b"), kids: [] };
   renderMarkdown(body, u.notes || "Bug fixes and improvements.", true);
   el.querySelector(".wn-x").addEventListener("click", () => { el.classList.add("out"); setTimeout(() => el.remove(), 250); });
@@ -920,7 +920,7 @@ async function installUpdate() {
   const u = pendingUpdate;
   if (!u) return;
   const mb = u.size ? ` (${(u.size / 1048576).toFixed(1)} MB)` : "";
-  const ok = await ask(`Install AIT ${u.latest}?`, `AIT will download the update${mb}, check it, install it and restart. Your settings and chats are kept.`);
+  const ok = await ask(`Install Cmdhive ${u.latest}?`, `Cmdhive will download the update${mb}, check it, install it and restart. Your settings and chats are kept.`);
   if (!ok) return;
   const b = $("#update");
   b.classList.add("busy");
@@ -938,19 +938,19 @@ async function installUpdate() {
 function renderPin() {
   const on = !!ui.settings?.alwaysOnTop;
   $("#pin").classList.toggle("on", on);
-  $("#pin").title = on ? "Always on top: on (click to turn off)" : "Keep AIT above other windows";
+  $("#pin").title = on ? "Always on top: on (click to turn off)" : "Keep Cmdhive above other windows";
 }
 
 function togglePin() {
   ui.settings.alwaysOnTop = !ui.settings.alwaysOnTop;
   API().SaveSettings(ui.settings);
   renderPin();
-  toast(ui.settings.alwaysOnTop ? "AIT stays on top of other windows." : "Always on top is off.", 2200);
+  toast(ui.settings.alwaysOnTop ? "Cmdhive stays on top of other windows." : "Always on top is off.", 2200);
 }
 
 // ---- theme ----------------------------------------------------------------------
 
-// The browser window looks like AIT: it is sent AIT's colours.
+// The browser window looks like Cmdhive: it is sent Cmdhive's colours.
 function browserTheme() {
   const root = document.documentElement, vars = {};
   for (const k of root.style) vars[k] = root.style.getPropertyValue(k);
@@ -1052,9 +1052,9 @@ function markSel() {
   $("#hlist").querySelectorAll(".hrow")[hSel]?.scrollIntoView({ block: "nearest" });
 }
 
-const HUGE_BYTES = 100 * 1024 * 1024; // drawing a chat this big would slow AIT down
+const HUGE_BYTES = 100 * 1024 * 1024; // drawing a chat this big would slow Cmdhive down
 
-// reopenTabs brings back the AI tabs open when AIT last quit, in order, with
+// reopenTabs brings back the AI tabs open when Cmdhive last quit, in order, with
 // the same one in front; very big chats come back with their summary rather
 // than asking about each. Reports whether any tab was reopened.
 async function reopenTabs() {
@@ -1078,7 +1078,7 @@ async function resumeChat(c) {
   let summary = false;
   if (c.size >= HUGE_BYTES) {
     const r = await ask(`This chat is big (${fmtBytes(c.size)})`,
-      "Showing all of it would slow AIT down. Open it with the AI's summary of the earlier conversation and only the latest messages? The AI still has the whole conversation either way.",
+      "Showing all of it would slow Cmdhive down. Open it with the AI's summary of the earlier conversation and only the latest messages? The AI still has the whole conversation either way.",
       "Open with summary", "Show everything");
     if (!r) return;
     summary = r === true;
@@ -1158,7 +1158,7 @@ async function confirmQuit() {
   if (answer) return;
   const running = [...tabs.values()].filter((t) => t.agent && !t.exited).length;
   const n = tabs.size;
-  const ok = await ask("Close AIT?", running
+  const ok = await ask("Close Cmdhive?", running
     ? `${n} tab${n === 1 ? "" : "s"} open, ${running} with an AI still running. Conversations stay in History.`
     : `${n} tab${n === 1 ? "" : "s"} will close.`);
   if (ok) API().Quit();
@@ -1201,7 +1201,7 @@ function traySnapshot() {
   return {
     tab: tab?.id || 0, canSend: !!(tab?.native && c && !c.reading && !c.loading), reply, ask,
     vars, theme: root.dataset.theme || "",
-    icon: tab ? icon(tab.profile) : "", ai: tab ? profile(tab.profile).name : "AIT", acct: tab?.account || "",
+    icon: tab ? icon(tab.profile) : "", ai: tab ? profile(tab.profile).name : "Cmdhive", acct: tab?.account || "",
     state, hasChat: !!c, busy: !!(c?.busy || c?.reading), started: c?.busy ? Date.now() - (performance.now() - c.started) : 0, others,
     step: last ? { cls: dot.className, dot: dot.textContent, l: last.querySelector(".tool-l").textContent, d: last.querySelector(".tool-d").textContent } : null,
     rows,
@@ -1326,7 +1326,7 @@ async function boot() {
   initSignIn();
   setInterval(() => { const t = tabs.get(active); if (t?.native) renderStatus(t); }, 30000); // keeps "resets in" current
   RT().EventsOn("update:available", showUpdate);
-  window.addEventListener("focus", () => API().UpdateNudge?.().catch(() => {})); // back at AIT: check if one is due
+  window.addEventListener("focus", () => API().UpdateNudge?.().catch(() => {})); // back at Cmdhive: check if one is due
 
   $("#new").addEventListener("click", () => openTab(ui.defaultProfile));
   $("#more").addEventListener("click", (e) => { e.stopPropagation(); $("#menu").hidden ? profileMenu() : hideMenu(); });
@@ -1381,7 +1381,7 @@ async function boot() {
     }
   });
   document.addEventListener("contextmenu", (e) => e.preventDefault());
-  // No web page ever loads inside AIT's window: any link not handled
+  // No web page ever loads inside Cmdhive's window: any link not handled
   // already opens in the browser.
   document.addEventListener("click", (e) => {
     const a = e.target.closest?.("a[href]");

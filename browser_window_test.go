@@ -8,13 +8,13 @@ import (
 )
 
 func TestBrowserTitle(t *testing.T) {
-	if got := browserTitle("Claude", ""); got != "AIT Browser · Claude" {
+	if got := browserTitle("Claude", ""); got != "Cmdhive Browser · Claude" {
 		t.Errorf("%q", got)
 	}
-	if got := browserTitle("Claude", "about:blank"); got != "AIT Browser · Claude" {
+	if got := browserTitle("Claude", "about:blank"); got != "Cmdhive Browser · Claude" {
 		t.Errorf("blank page: %q", got)
 	}
-	if got := browserTitle("ChatGPT", "Example Domain"); got != "Example Domain — AIT Browser · ChatGPT" {
+	if got := browserTitle("ChatGPT", "Example Domain"); got != "Example Domain — Cmdhive Browser · ChatGPT" {
 		t.Errorf("%q", got)
 	}
 }
@@ -60,7 +60,7 @@ func TestBrowserIdleClose(t *testing.T) {
 	}
 }
 
-// browser_close: the gate tells AIT, the window goes (the log stays), and the
+// browser_close: the gate tells Cmdhive, the window goes (the log stays), and the
 // chat's button hides.
 func TestBrowserCloseEndpoint(t *testing.T) {
 	store, _ := newStoreAt(t.TempDir(), t.TempDir())

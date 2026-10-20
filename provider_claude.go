@@ -159,7 +159,7 @@ func (c *claude) mirrorState(home, cwd string, trusted bool) {
 
 // mirrorProjectMcp gives the account the MCP servers main set up for one
 // folder ("local" scope). One main had switched off stays off when it first
-// arrives; after that the account's own switches (AIT's MCP list) rule.
+// arrives; after that the account's own switches (Cmdhive's MCP list) rule.
 func mirrorProjectMcp(dst map[string]any, servers map[string]any, mainOff any) {
 	have, _ := dst["mcpServers"].(map[string]any)
 	if have == nil {
@@ -467,7 +467,7 @@ func stampedBefore(ts string, since time.Time) bool {
 // headLines is the start of a file in whole lines: at least n bytes, with the
 // line in progress at that point read to its end (to max in all). A chat that
 // began as a handover has the whole earlier conversation in its first line;
-// cutting that line in half left the chat without a title, so AIT hid it from
+// cutting that line in half left the chat without a title, so Cmdhive hid it from
 // History and could not reopen it.
 func headLines(p string, n, max int64) []byte {
 	f, err := os.Open(p)

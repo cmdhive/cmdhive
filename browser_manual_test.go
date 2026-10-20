@@ -42,9 +42,9 @@ func realBrowser(t *testing.T, profile string, acct Account, help ...bool) {
 	root := t.TempDir()
 	// The real, installed Playwright server, copied so the test needs no network.
 	appData, _ := os.UserConfigDir()
-	src := filepath.Join(appData, "AIT", "browser")
+	src := filepath.Join(appData, dataFolder, "browser")
 	if !fileExists(filepath.Join(src, "node_modules", "@playwright", "mcp", "cli.js")) {
-		t.Skip("the browser is not installed (start AIT once)")
+		t.Skip("the browser is not installed (start Cmdhive once)")
 	}
 	if out, err := exec.Command("robocopy", src, filepath.Join(root, "browser"), "/E", "/NFL", "/NDL", "/NJH", "/NJS", "/XD", "profile", "output", "tmp").CombinedOutput(); err != nil && !strings.Contains(err.Error(), "exit status 1") {
 		t.Fatalf("copy: %v %s", err, out)

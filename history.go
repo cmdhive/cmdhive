@@ -110,7 +110,7 @@ func (a *App) SaveAttachment(b64, ext string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	dir := filepath.Join(os.TempDir(), "AIT")
+	dir := filepath.Join(os.TempDir(), "Cmdhive")
 	os.MkdirAll(dir, 0o755)
 	ext = strings.Trim(strings.ToLower(ext), ". ")
 	if ext == "" || len(ext) > 5 {
@@ -157,7 +157,7 @@ func pickFolder(ctx context.Context, def string) (string, error) {
 }
 
 // handoverTitle names a chat that began as a handover by what it is about:
-// its first message is AIT's handover prompt, which embeds the conversation,
+// its first message is Cmdhive's handover prompt, which embeds the conversation,
 // so the title becomes that conversation's first request (through nested
 // handovers) and the AI it came from.
 func handoverTitle(first string) string {

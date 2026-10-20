@@ -11,7 +11,7 @@ import (
 
 // Reopening the tabs from last time. The open AI tabs (their conversation
 // files, in order, and which one was active) are saved to tabs.json whenever
-// that changes and when AIT quits; the next start reopens them.
+// that changes and when Cmdhive quits; the next start reopens them.
 
 // SavedTab is one tab to reopen.
 type SavedTab struct {
@@ -25,7 +25,7 @@ type SavedTab struct {
 type tabsSaver struct {
 	sync.Mutex
 	timer *time.Timer
-	done  bool // AIT is quitting: the final save is written
+	done  bool // Cmdhive is quitting: the final save is written
 	read  bool // the page has read last time's tabs; nothing is saved before
 }
 
@@ -45,7 +45,7 @@ func (a *App) queueTabsSave() {
 	a.tabsSave.timer = time.AfterFunc(500*time.Millisecond, a.saveOpenTabs)
 }
 
-// finalTabsSave writes the tabs as AIT quits; nothing saves after it, so
+// finalTabsSave writes the tabs as Cmdhive quits; nothing saves after it, so
 // closing them on the way out cannot empty the list.
 func (a *App) finalTabsSave() {
 	a.tabsSave.Lock()

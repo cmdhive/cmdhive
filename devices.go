@@ -12,14 +12,14 @@ import (
 	"time"
 )
 
-// Connected devices: every PC and Mac that runs AIT can share one memory.
+// Connected devices: every PC and Mac that runs Cmdhive can share one memory.
 //
 // There is no server and no account. The user points every device at the same
 // folder — one their own cloud drive already syncs (iCloud Drive, OneDrive,
-// Dropbox, Syncthing), or a NAS share, or a USB stick — and AIT keeps the
+// Dropbox, Syncthing), or a NAS share, or a USB stick — and Cmdhive keeps the
 // shared memory inside it:
 //
-//	<picked folder>/AIT Memory/devices/<device id>/device.json   name, OS, last seen
+//	<picked folder>/Cmdhive Memory/devices/<device id>/device.json   name, OS, last seen
 //	                                              /memory/*.md   that device's memories
 //
 // A device writes only its own folder there, so two devices can never edit the
@@ -30,22 +30,23 @@ import (
 //
 //	<memory folder>/MEMORY.md          this device's own memories (unchanged)
 //	               /from-macbook/…     another device's, read-only
-//	               /DEVICES.md         what is connected (AIT writes this)
+//	               /DEVICES.md         what is connected (Cmdhive writes this)
 //
 // With one device connected there is nothing to mirror and nothing changes: the
 // memory folder stays exactly as it was.
 
 const (
-	syncFolder   = "AIT Memory" // created inside the folder the user picks
+	syncFolder   = "Cmdhive Memory" // created inside the folder the user picks
+	legacyFolder = "AIT Memory"     // its name before Cmdhive was renamed
 	mirrorPrefix = "from-"
-	mirrorMark   = ".ait-mirror" // marks a folder as AIT's copy, safe to remove
+	mirrorMark   = ".ait-mirror" // marks a folder as Cmdhive's copy, safe to remove
 	devicesIndex = "DEVICES.md"
 	deviceFile   = "device.json"
 	syncEvery    = 30 * time.Second
-	deviceOnline = 5 * time.Minute // seen this recently: AIT is running there
+	deviceOnline = 5 * time.Minute // seen this recently: Cmdhive is running there
 )
 
-// Device is one AIT installation, as recorded in the shared folder.
+// Device is one Cmdhive installation, as recorded in the shared folder.
 type Device struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
@@ -62,7 +63,7 @@ type DeviceView struct {
 	Folder   string `json:"folder"`   // where its memories are mirrored locally ("" for this device)
 	Seen     string `json:"seen"`     // "active now", "4 h ago", …
 	This     bool   `json:"this"`     // this device
-	Online   bool   `json:"online"`   // AIT is running there now
+	Online   bool   `json:"online"`   // Cmdhive is running there now
 	Memories int    `json:"memories"` // .md files it shares
 }
 
@@ -213,7 +214,7 @@ type deviceSync struct {
 }
 
 // startDeviceSync keeps this device's memories and the other devices' in step,
-// from start-up until AIT quits. Doing nothing is the normal case: no shared
+// from start-up until Cmdhive quits. Doing nothing is the normal case: no shared
 // folder means no work.
 func (a *App) startDeviceSync() {
 	go func() {
@@ -296,7 +297,7 @@ func (a *App) runSync(root string) error {
 	return nil
 }
 
-// peersChanged notices another device joining or leaving while AIT is open.
+// peersChanged notices another device joining or leaving while Cmdhive is open.
 // The instructions AIs are started with name the other devices, so the agent
 // waiting in the wings was briefed before this one arrived: it is replaced.
 func (a *App) peersChanged(peers []Device) {
@@ -321,7 +322,7 @@ func (a *App) peersChanged(peers []Device) {
 
 // mirrorFlat makes dst hold exactly the files at the top level of src: changed
 // files are copied, files no longer in src are removed. It is only ever
-// pointed at a folder AIT owns — this device's folder in the shared area, or a
+// pointed at a folder Cmdhive owns — this device's folder in the shared area, or a
 // mirror folder in the local memory — never another device's.
 func mirrorFlat(src, dst string, skip ...string) error {
 	entries, err := os.ReadDir(src)
@@ -372,7 +373,7 @@ func dropMirrors(mem string, keep map[string]bool) {
 		if !e.IsDir() || keep[e.Name()] || !strings.HasPrefix(e.Name(), mirrorPrefix) {
 			continue
 		}
-		// Only a folder AIT filled itself; a folder of the user's that happens
+		// Only a folder Cmdhive filled itself; a folder of the user's that happens
 		// to be named this way is left alone.
 		if fileExists(filepath.Join(mem, e.Name(), mirrorMark)) {
 			os.RemoveAll(filepath.Join(mem, e.Name()))
@@ -391,11 +392,11 @@ func writeDevicesIndex(mem string, own Device, peers []Device) error {
 	}
 	var b strings.Builder
 	b.WriteString("# Connected devices\n\n")
-	b.WriteString("AIT keeps one memory across several computers. AIT writes this file — don't edit it.\n\n")
+	b.WriteString("Cmdhive keeps one memory across several computers. Cmdhive writes this file — don't edit it.\n\n")
 	fmt.Fprintf(&b, "- **%s** (%s) — this device. Its memories are the `.md` files next to this one, indexed by `%s`. Save new memories here.\n", own.Name, own.OS, memoryIndex)
 	for _, d := range peers {
 		folder := mirrorName(d, peers)
-		fmt.Fprintf(&b, "- **%s** (%s, %s) — in `%s/`, indexed by `%s/%s`. Read-only: AIT overwrites that folder.\n",
+		fmt.Fprintf(&b, "- **%s** (%s, %s) — in `%s/`, indexed by `%s/%s`. Read-only: Cmdhive overwrites that folder.\n",
 			d.Name, d.OS, seenText(d.LastSeen), folder, folder, memoryIndex)
 	}
 	b.WriteString("\nWhich device a memory came from can matter: paths, installed tools and hardware differ per device.\n")
@@ -421,7 +422,7 @@ func seenText(unix int64) string {
 	}
 }
 
-// writeAtomic writes a file in one step, so a cloud drive or another AIT never
+// writeAtomic writes a file in one step, so a cloud drive or another Cmdhive never
 // reads half of it.
 func writeAtomic(p string, b []byte) error {
 	os.MkdirAll(filepath.Dir(p), 0o755)

@@ -9,8 +9,8 @@ void aitBounce(void);
 */
 import "C"
 
-// inFront reports whether AIT is the app the user is looking at.
+// inFront reports whether Cmdhive is the app the user is looking at.
 func inFront() bool { return C.aitActive() != 0 }
 
-// dockBounce makes AIT's Dock icon jump once.
+// dockBounce makes Cmdhive's Dock icon jump once.
 func dockBounce() { C.aitBounce() }

@@ -13,7 +13,7 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// AIT is a GUI binary; any console helper it runs would flash a window.
+// Cmdhive is a GUI binary; any console helper it runs would flash a window.
 func hideConsole(cmd *exec.Cmd) {
 	if cmd.SysProcAttr == nil {
 		cmd.SysProcAttr = &syscall.SysProcAttr{}
@@ -40,7 +40,7 @@ var (
 	procAllowSetFg        = user32.NewProc("AllowSetForegroundWindow")
 )
 
-// allowForeground lets the copy of AIT that is already open bring itself to
+// allowForeground lets the copy of Cmdhive that is already open bring itself to
 // the front when this launch hands over to it; Windows refuses otherwise.
 func allowForeground() {
 	const asfwAny = ^uintptr(0)

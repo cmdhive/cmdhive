@@ -1,4 +1,4 @@
-// AIT — a terminal that runs one AI agent across several accounts and
+// Cmdhive — a terminal that runs one AI agent across several accounts and
 // passes the conversation to the next account when one runs out of usage.
 package main
 
@@ -29,7 +29,7 @@ func main() {
 	allowForeground()
 
 	opts := &options.App{
-		Title:            "AIT",
+		Title:            "Cmdhive",
 		Width:            1100,
 		Height:           680,
 		MinWidth:         420,
@@ -43,7 +43,7 @@ func main() {
 		DragAndDrop:      &options.DragAndDrop{EnableFileDrop: true},
 		Bind:             []any{app},
 		// A second launch shows the open window instead of starting another
-		// AIT that would fight it over the same accounts and chats.
+		// Cmdhive that would fight it over the same accounts and chats.
 		SingleInstanceLock: &options.SingleInstanceLock{
 			UniqueId:               "ait-c3a7e0f4-5b1d-4e8a-9f20-6d4b1c8e7a35",
 			OnSecondInstanceLaunch: app.secondLaunch,
@@ -57,14 +57,14 @@ func main() {
 		},
 	}
 	if runtime.GOOS == "darwin" {
-		// The Mac's own window buttons sit over AIT's tab bar; the Edit menu is
+		// The Mac's own window buttons sit over Cmdhive's tab bar; the Edit menu is
 		// what makes copy and paste work in the web view.
 		opts.Frameless = false
 		opts.Menu = menu.NewMenuFromItems(menu.AppMenu(), menu.EditMenu(), menu.WindowMenu())
 		opts.Mac = &mac.Options{
 			TitleBar:   mac.TitleBarHiddenInset(),
 			Appearance: mac.NSAppearanceNameDarkAqua,
-			About:      &mac.AboutInfo{Title: "AIT", Message: "Version " + Version},
+			About:      &mac.AboutInfo{Title: "Cmdhive", Message: "Version " + Version},
 		}
 	}
 	err = wails.Run(opts)

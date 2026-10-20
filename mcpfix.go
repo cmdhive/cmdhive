@@ -122,11 +122,11 @@ func mcpFixPrompt(p Provider, cwd, name, status, errText, where string) string {
 	case "claude":
 		main := filepath.Join(filepath.Dir(p.DefaultHome()), ".claude.json")
 		settings = "Claude Code keeps MCP servers in " + main + ": \"mcpServers\" (every folder) and \"projects\" → the folder → \"mcpServers\" (one folder), " +
-			"and in .mcp.json files in project folders. AIT copies " + main + " to its other Claude accounts whenever a chat starts, so change it there " +
+			"and in .mcp.json files in project folders. Cmdhive copies " + main + " to its other Claude accounts whenever a chat starts, so change it there " +
 			"(edit the file, or run `claude mcp` with CLAUDE_CONFIG_DIR unset), never in an account copy. `claude mcp get " + name + "` checks the server."
 	case "codex":
 		main := filepath.Join(p.DefaultHome(), "config.toml")
-		settings = "Codex keeps MCP servers in " + main + " as [mcp_servers.NAME] tables. AIT copies that file to its other ChatGPT accounts whenever a chat starts, " +
+		settings = "Codex keeps MCP servers in " + main + " as [mcp_servers.NAME] tables. Cmdhive copies that file to its other ChatGPT accounts whenever a chat starts, " +
 			"so change it there, never in an account copy."
 	}
 	if errText == "" {
@@ -135,13 +135,13 @@ func mcpFixPrompt(p Provider, cwd, name, status, errText, where string) string {
 	if where == "" {
 		where = "(see the settings)"
 	}
-	return "You are fixing one MCP server for the user of AIT, out of sight: the user sees only a small progress screen and your final message.\n\n" +
+	return "You are fixing one MCP server for the user of Cmdhive, out of sight: the user sees only a small progress screen and your final message.\n\n" +
 		"Server: " + name + "\nStatus: " + status + "\nError: " + errText + "\nRuns: " + where + "\nChat folder: " + cwd + "\n\n" + settings + "\n\n" +
 		"Find out why it does not work and fix it: a missing or moved program, a package to install or build, a wrong path, argument or URL, " +
 		"a dead local service. Keep its name; change nothing unrelated, never remove or switch off a server, never touch other servers. " +
 		"Check that it starts before you say it is fixed.\n" +
 		"If the user must sign in or approve something in a browser, write the address on its own line as `OPEN: <url>` as soon as you have it " +
-		"(AIT opens it for them), then wait for it to work if you can.\n" +
+		"(Cmdhive opens it for them), then wait for it to work if you can.\n" +
 		"If only the user can fix it (for example an app on this PC that must be running, like Roblox Studio), say exactly what to do.\n" +
 		"End with a short message for the user: at most two plain sentences on what was wrong and what you did. " +
 		"Its last line is exactly `RESULT: fixed` or `RESULT: not fixed`."

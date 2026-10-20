@@ -17,10 +17,10 @@ import (
 	"time"
 )
 
-// The AIs' own web browser: a window of AIT's, like a live stream. Playwright's
-// MCP server (installed once into AIT's folder) drives the page in it through
+// The AIs' own web browser: a window of Cmdhive's, like a live stream. Playwright's
+// MCP server (installed once into Cmdhive's folder) drives the page in it through
 // its debugging port (browserview.go); the column beside the page, with the
-// steps and the questions, is AIT's own. gate.cjs sits between the AI and
+// steps and the questions, is Cmdhive's own. gate.cjs sits between the AI and
 // Playwright: it opens the window on first use, closes it with browser_close,
 // asks the user before a site is opened for the first time and lets the AI
 // hand a step to the user.
@@ -70,7 +70,7 @@ type browserHub struct {
 	logs    map[string]*browserLog // by key, one per launch
 	asks    map[string]*browserAsk // pending, by request id
 	nextAsk int
-	theme   string // AIT's colours as the main page last sent them (JSON)
+	theme   string // Cmdhive's colours as the main page last sent them (JSON)
 }
 
 // sortedAsks lists a browser's pending questions in the order they were asked.
@@ -102,7 +102,7 @@ func nodeBinary() string {
 }
 
 // browserReady reports whether the AIs can have a browser on this PC (Node.js
-// runs the server; the surface is WebView2, which AIT itself needs).
+// runs the server; the surface is WebView2, which Cmdhive itself needs).
 func (s *Store) browserReady() bool {
 	return nodeBinary() != "" && fileExists(s.browserCLI())
 }
@@ -237,7 +237,7 @@ func (a *App) browserModeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "ask")
 }
 
-// browserCloseHTTP is the gate telling AIT the AI closed its browser: the
+// browserCloseHTTP is the gate telling Cmdhive the AI closed its browser: the
 // window goes. The next browser call opens a fresh one.
 func (a *App) browserCloseHTTP(w http.ResponseWriter, r *http.Request) {
 	if l := a.browserLogFor(r.URL.Query().Get("key")); l != nil {
@@ -246,7 +246,7 @@ func (a *App) browserCloseHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "ok")
 }
 
-// browserNote appends a line to the browser's own log (AIT's folder, browser\log.txt),
+// browserNote appends a line to the browser's own log (Cmdhive's folder, browser\log.txt),
 // so a window that closes by itself leaves a reason.
 func (a *App) browserNote(format string, args ...any) {
 	f, err := os.OpenFile(filepath.Join(a.store.browserDir(), "log.txt"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
@@ -262,7 +262,7 @@ func (a *App) browserNote(format string, args ...any) {
 
 // browserTitle is the window's title (and its taskbar button's).
 func browserTitle(ai, page string) string {
-	t := "AIT Browser · " + ai
+	t := "Cmdhive Browser · " + ai
 	if page = strings.TrimSpace(page); page != "" && page != "about:blank" {
 		t = shorten(page, 60) + " — " + t
 	}

@@ -38,7 +38,7 @@ func (c *codex) ChatArgs(l Launch, perm string) []string {
 		prefix := "mcp_servers." + m.Name
 		argv, _ := json.Marshal(m.Args)
 		args = append(args, "-c", prefix+".command="+tomlString(m.Command), "-c", prefix+".args="+string(argv),
-			"-c", prefix+".default_tools_approval_mode=\"approve\"", // AIT's own servers ask the user themselves
+			"-c", prefix+".default_tools_approval_mode=\"approve\"", // Cmdhive's own servers ask the user themselves
 			"-c", prefix+".startup_timeout_sec=30", "-c", prefix+".tool_timeout_sec=900") // a step may wait for the user
 	}
 	for i := 0; i < len(l.Extra); i++ {
@@ -67,7 +67,7 @@ func rpc(id int, method string, params any) []byte {
 	return append(b, '\n')
 }
 
-// approval settings for AIT's three permission choices.
+// approval settings for Cmdhive's three permission choices.
 func codexPolicy(perm string) (approval, sandbox string) {
 	switch perm {
 	case "review":
@@ -96,7 +96,7 @@ func (c *codex) ChatStart(st *ChatState, l Launch, perm, cwd string) [][]byte {
 	id := st.Next()
 	st.Put("initID", id)
 	return [][]byte{rpc(id, "initialize", map[string]any{
-		"clientInfo": map[string]any{"name": "AIT", "version": Version}, "capabilities": nil})}
+		"clientInfo": map[string]any{"name": "Cmdhive", "version": Version}, "capabilities": nil})}
 }
 
 func (c *codex) ChatUser(st *ChatState, text string, images []Image) []byte {
@@ -413,7 +413,7 @@ func (c *codex) item(st *ChatState, it codexItem, done bool) []Ev {
 		if !done {
 			return []Ev{{"k": "start", "i": it.ID, "type": "text"}}
 		}
-		// The whole message too: what AIT reads requests and answers from
+		// The whole message too: what Cmdhive reads requests and answers from
 		// (the review marker, a reviewer's feedback) when no deltas came.
 		return []Ev{{"k": "stop", "i": it.ID}, {"k": "final", "text": it.Text}}
 	case "reasoning":

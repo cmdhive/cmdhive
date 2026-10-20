@@ -23,7 +23,7 @@ const memoryIndex = "MEMORY.md"
 
 // MemoryDir is the shared memory folder: the user's choice, else Claude's
 // existing memory for the home folder (so someone already using Claude keeps
-// everything it remembers), else AIT's own folder.
+// everything it remembers), else Cmdhive's own folder.
 func (s *Store) MemoryDir() string {
 	if d := s.Config().MemoryDir; d != "" {
 		return d
@@ -63,13 +63,13 @@ func deviceRules(peers []Device) string {
 	}
 	return "\n- The user's other devices share this memory too: theirs are in `" + mirrorPrefix +
 		"<device>/` folders, each with its own " + memoryIndex + ", and `" + devicesIndex +
-		"` lists which device is which. Read them like your own, but save new memories at the top level (this device) — AIT overwrites the `" + mirrorPrefix + "…` folders.\n" +
+		"` lists which device is which. Read them like your own, but save new memories at the top level (this device) — Cmdhive overwrites the `" + mirrorPrefix + "…` folders.\n" +
 		"- Name the device when it matters: paths, installed tools and hardware differ between them."
 }
 
 func memoryRulesBase(dir string) string {
 	return "\n\n## Shared memory\n" +
-		"- All AIs in AIT share one memory folder: " + dir + "\n" +
+		"- All AIs in Cmdhive share one memory folder: " + dir + "\n" +
 		"- Read " + memoryIndex + " there before starting work; open the files it links only when relevant.\n" +
 		"- Save lasting facts (who the user is, their preferences, project decisions, corrections) there: one fact per .md file with a short kebab-case name, plus one line in " + memoryIndex + " (`- [Title](file.md) — hook`). Update an existing file rather than adding a near-duplicate.\n" +
 		"- Never save secrets, passwords or tokens. Don't save what the code or git history already records.\n" +

@@ -9,7 +9,7 @@ import (
 )
 
 // Prewarming. An agent takes seconds to start (measured: ~2.7s for Claude on
-// a slow machine, before AIT's own window has even loaded), so one is always
+// a slow machine, before Cmdhive's own window has even loaded), so one is always
 // started ahead of time: the first at app launch, in parallel with the window,
 // and the next a little after each one is taken. Opening a tab adopts it and
 // the agent is simply there.
@@ -146,8 +146,8 @@ func (a *App) lastSize() (int, int) {
 // ---- remembered folder trust -------------------------------------------------
 
 // A folder is remembered as trusted once a conversation has started in it in
-// AIT — answering the agent's trust prompt is what made that possible. From
-// then on AIT answers the prompt itself in that folder.
+// Cmdhive — answering the agent's trust prompt is what made that possible. From
+// then on Cmdhive answers the prompt itself in that folder.
 
 func (s *Store) trustPath() string { return filepath.Join(s.root, "trusted.json") }
 

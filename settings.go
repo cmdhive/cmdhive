@@ -30,7 +30,7 @@ type Settings struct {
 	BrowserSites []string          `json:"browserSites"` // sites the AIs may always open
 }
 
-// AgentStatus is one row of the first-run screen: an agent and whether AIT
+// AgentStatus is one row of the first-run screen: an agent and whether Cmdhive
 // found it installed and signed in.
 type AgentStatus struct {
 	ID        string `json:"id"`

@@ -11,7 +11,7 @@ import (
 )
 
 // Node.js for a Mac comes as a .tar.gz with a top folder; it is unpacked into
-// AIT's own folder without that folder, links and run bits intact, and nothing
+// Cmdhive's own folder without that folder, links and run bits intact, and nothing
 // may escape the folder.
 func TestUntarStripped(t *testing.T) {
 	build := func(files map[string]string, link bool) []byte {

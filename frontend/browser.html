@@ -6,7 +6,7 @@
 /*AIT_CSS*/
 html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
 body { display: flex; flex-direction: column; color: var(--text); font: 12px/1.4 var(--ui); user-select: none; }
-/* The column of AIT's browser window: like a live stream's chat, beside the page. */
+/* The column of Cmdhive's browser window: like a live stream's chat, beside the page. */
 .bw-h { display: flex; align-items: center; gap: 9px; height: 46px; flex: none; padding: 0 14px; background: var(--row); border-bottom: 1px solid var(--line); }
 .bw-live { flex: none; padding: 2px 7px; border-radius: 4px; background: var(--faint); color: var(--bg); font-size: 10.5px; font-weight: 700; letter-spacing: .6px; }
 .bw-live.on { background: var(--err); animation: bwPulse 1.6s ease-in-out infinite; }
@@ -40,7 +40,7 @@ body { display: flex; flex-direction: column; color: var(--text); font: 12px/1.4
 </style>
 </head>
 <body class="ready">
-<!-- The right-hand column of the AIs' browser window (browserview.go). AIT puts
+<!-- The right-hand column of the AIs' browser window (browserview.go). Cmdhive puts
      its stylesheets above and sends the state with update(). -->
 <div class="bw-h"><span class="bw-live">LIVE</span><span class="bw-t"><b>AI is browsing</b><span>Idle</span></span></div>
 <div class="bw-nav">

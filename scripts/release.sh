@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Publish a new AIT version. Every installed AIT will then offer the update.
+# Publish a new Cmdhive version. Every installed copy will then offer the update.
 #
 #   scripts/release.sh 1.0.1 "Fixed the model switcher on small windows."
 #
@@ -7,7 +7,7 @@
 set -euo pipefail
 
 V="${1:?usage: scripts/release.sh <version> [notes]}"
-NOTES="${2:-AIT $V}"
+NOTES="${2:-Cmdhive $V}"
 [[ "$V" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "version must look like 1.2.3"; exit 1; }
 
 cd "$(dirname "$0")/.."
@@ -36,14 +36,18 @@ node scripts/browser.test.cjs
 wails build -s -trimpath -nsis -ldflags "-X main.Version=$V"
 
 mkdir -p dist
-cp build/bin/AIT-amd64-installer.exe dist/AIT-setup.exe
-sha256sum dist/AIT-setup.exe | cut -d' ' -f1 > dist/AIT-setup.exe.sha256
-echo "sha256: $(cat dist/AIT-setup.exe.sha256)"
+cp build/bin/Cmdhive-amd64-installer.exe dist/Cmdhive-setup.exe
+sha256sum dist/Cmdhive-setup.exe | cut -d' ' -f1 > dist/Cmdhive-setup.exe.sha256
+# Cmdhive was called AIT, and copies from then update from AIT-setup.exe: the
+# same installer under that name too, or they would never update again.
+cp dist/Cmdhive-setup.exe dist/AIT-setup.exe
+cp dist/Cmdhive-setup.exe.sha256 dist/AIT-setup.exe.sha256
+echo "sha256: $(cat dist/Cmdhive-setup.exe.sha256)"
 
 # wails rewrites the installer's version on every build.
 git add wails.json build/windows/installer/wails_tools.nsh
 git diff --cached --quiet || git commit -m "Release v$V"
-git tag -a "v$V" -m "AIT $V"
+git tag -a "v$V" -m "Cmdhive $V"
 git push origin HEAD "v$V"
-gh release create "v$V" dist/AIT-setup.exe dist/AIT-setup.exe.sha256 --title "AIT $V" --notes "$NOTES"
-echo "Released AIT $V"
+gh release create "v$V" dist/Cmdhive-setup.exe dist/Cmdhive-setup.exe.sha256 dist/AIT-setup.exe dist/AIT-setup.exe.sha256 --title "Cmdhive $V" --notes "$NOTES"
+echo "Released Cmdhive $V"

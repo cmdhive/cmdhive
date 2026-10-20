@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// A device group in a temp folder: AIT's own store plus somewhere to act as
+// A device group in a temp folder: Cmdhive's own store plus somewhere to act as
 // the user's cloud drive.
 func deviceApp(t *testing.T) (*App, string, string) {
 	t.Helper()
@@ -119,7 +119,7 @@ func TestTwoDevicesShareMemory(t *testing.T) {
 }
 
 // The mirror never travels on: a memory read from another device is not
-// published again as this device's own, however many times AIT syncs.
+// published again as this device's own, however many times Cmdhive syncs.
 func TestMirroredMemoriesAreNotRepublished(t *testing.T) {
 	app, mem, drive := deviceApp(t)
 	os.WriteFile(filepath.Join(mem, "own.md"), []byte("mine"), 0o644)
@@ -139,7 +139,7 @@ func TestMirroredMemoriesAreNotRepublished(t *testing.T) {
 	}
 }
 
-// AIT only ever writes its own folder in the shared area.
+// Cmdhive only ever writes its own folder in the shared area.
 func TestPeerFolderIsNeverWritten(t *testing.T) {
 	app, _, drive := deviceApp(t)
 	shared := connect(t, app, drive)
@@ -219,7 +219,7 @@ func TestForgetAndDisconnect(t *testing.T) {
 	}
 }
 
-// The drive is not mounted (on a plane, or the stick is out): AIT says so and
+// The drive is not mounted (on a plane, or the stick is out): Cmdhive says so and
 // keeps every memory it already has.
 func TestOfflineDriveKeepsMemories(t *testing.T) {
 	app, mem, drive := deviceApp(t)
@@ -249,10 +249,10 @@ func TestSharedFolderChoice(t *testing.T) {
 	mem := t.TempDir()
 	got, err := sharedFolderFor(picked, mem)
 	if err != nil || got != filepath.Join(picked, syncFolder) {
-		t.Fatalf("AIT's folder goes inside the one picked: %q %v", got, err)
+		t.Fatalf("Cmdhive's folder goes inside the one picked: %q %v", got, err)
 	}
 	// The second device picks the same folder, which the drive has synced by
-	// then, so it is already AIT's own.
+	// then, so it is already Cmdhive's own.
 	os.MkdirAll(got, 0o755)
 	again, err := sharedFolderFor(got, mem)
 	if err != nil || again != got {
@@ -269,6 +269,17 @@ func TestSharedFolderChoice(t *testing.T) {
 	if _, err := sharedFolderFor(filepath.Join(picked, "nope"), mem); err == nil {
 		t.Error("a folder that does not exist was accepted")
 	}
+	// A device connected while Cmdhive was still AIT shares through "AIT
+	// Memory": a device connecting now must join that one, not start a new one.
+	drive := t.TempDir()
+	old := filepath.Join(drive, legacyFolder)
+	os.MkdirAll(old, 0o755)
+	if got, err := sharedFolderFor(drive, mem); err != nil || got != old {
+		t.Fatalf("the old shared folder was not joined: %q %v", got, err)
+	}
+	if got, err := sharedFolderFor(old, mem); err != nil || got != old {
+		t.Fatalf("picking the old shared folder itself: %q %v", got, err)
+	}
 }
 
 // Two devices the user called the same thing still get a folder each.
@@ -284,7 +295,7 @@ func TestSameNamedDevices(t *testing.T) {
 	}
 }
 
-// A device joining or leaving while AIT is open replaces the agent waiting in
+// A device joining or leaving while Cmdhive is open replaces the agent waiting in
 // the wings, whose instructions were written before it. The first sync of a
 // run only takes stock: that agent already knew.
 func TestPeerArrivalReplacesStandby(t *testing.T) {

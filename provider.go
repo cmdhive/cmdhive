@@ -9,18 +9,18 @@ import (
 	"time"
 )
 
-// Provider is everything AIT knows about one AI command-line agent. The
-// rest of AIT — accounts, tabs, the handoff, history, the UI — only ever
+// Provider is everything Cmdhive knows about one AI command-line agent. The
+// rest of Cmdhive — accounts, tabs, the handoff, history, the UI — only ever
 // talks to this interface, so adding an agent (Gemini, …) is one new file
 // that implements it plus one line in providers().
 //
-// Every agent AIT can drive shares three properties, and the interface is
+// Every agent Cmdhive can drive shares three properties, and the interface is
 // built on exactly those:
 //
 //  1. Its whole login + state lives in one directory, and an environment
 //     variable can point it elsewhere (CLAUDE_CONFIG_DIR, CODEX_HOME). That
 //     directory is what an "account" is.
-//  2. It writes each conversation to a transcript file as it goes. AIT
+//  2. It writes each conversation to a transcript file as it goes. Cmdhive
 //     tails that file to notice a usage limit, and copies it to carry the
 //     conversation to another account.
 //  3. It can resume a conversation by id, optionally with a first prompt.
@@ -34,7 +34,7 @@ type Provider interface {
 	// HomeEnv names the variable that points the agent at an account's dir.
 	HomeEnv() string
 	// DefaultHome is the dir the agent uses when HomeEnv is unset — the
-	// user's normal login, which AIT never modifies.
+	// user's normal login, which Cmdhive never modifies.
 	DefaultHome() string
 
 	SignedIn(home string) bool
@@ -48,24 +48,24 @@ type Provider interface {
 	// Args builds the command line after the binary. Exactly one of
 	// l.NewID / l.ResumeID is set; NewID is only set when PresetsID().
 	Args(l Launch) []string
-	// Models lists the models offered in AIT's model switcher. The first is
+	// Models lists the models offered in Cmdhive's model switcher. The first is
 	// always the agent's own default ("").
 	Models() []Model
 	// ModelArgs selects a model at launch.
 	ModelArgs(id string) []string
 	// AccessArgs lets the agent work in these folders as well as the one it
-	// starts in (AIT passes every fixed drive when file access is
+	// starts in (Cmdhive passes every fixed drive when file access is
 	// "everywhere"). Approval prompts still apply.
 	AccessArgs(dirs []string) []string
 	// ShareMemory links the agent's own memory folder for cwd (if it has
 	// one, and it does not exist yet) to the shared memory folder. Agents
 	// without a memory folder do nothing; their instructions cover it.
 	ShareMemory(home, cwd, shared string)
-	// RulesArgs passes AIT's rules (rules.md) through the agent's own flag
+	// RulesArgs passes Cmdhive's rules (rules.md) through the agent's own flag
 	// for extra instructions. file is the path, text its contents.
 	RulesArgs(file, text string) []string
 	// PresetsID reports whether the agent accepts a session id chosen by
-	// AIT up front. When false, AIT discovers it from the new transcript.
+	// Cmdhive up front. When false, Cmdhive discovers it from the new transcript.
 	PresetsID() bool
 
 	// SessionFile is where the transcript for id lives in home, or "" when
@@ -88,14 +88,14 @@ type Provider interface {
 	Chats(home string) []Chat
 
 	// NestingEnv lists environment variables the agent sets on its own child
-	// processes. AIT may be started from inside an agent, and an agent that
+	// processes. Cmdhive may be started from inside an agent, and an agent that
 	// inherits these believes it is a sub-session — Claude then stops saving
 	// its transcript, which would break handoff and history.
 	NestingEnv() []string
 	// TrustAnswer steps through a folder-trust prompt that cannot be
 	// pre-accepted in config (Claude never saves trust for the home folder).
 	// all is the screen text since launch, fresh is what arrived since the
-	// last key AIT sent. It returns the next key to press ("" for none yet)
+	// last key Cmdhive sent. It returns the next key to press ("" for none yet)
 	// and whether that key confirms the prompt. One key at a time, each
 	// decided from the redrawn screen, because keys sent in a burst get lost.
 	// Only used for folders the user has already trusted. Agents without
@@ -128,10 +128,10 @@ type Launch struct {
 	Prompt   string      // sent as the first message; "" for none
 	Extra    []string    // user's extra arguments from config.json
 	McpOff   []string    // MCP servers the user switched off for this AI
-	Mcp      []McpServer // servers AIT adds to this start (the browser, browser.go)
+	Mcp      []McpServer // servers Cmdhive adds to this start (the browser, browser.go)
 }
 
-// McpServer is a stdio MCP server AIT gives an AI for one start.
+// McpServer is a stdio MCP server Cmdhive gives an AI for one start.
 type McpServer struct {
 	Name, Command string
 	Args          []string

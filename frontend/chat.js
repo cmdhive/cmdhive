@@ -33,7 +33,7 @@ function createChat(tab) {
     <div class="dock">
       <div class="trustbar" hidden>
         <span class="tb-icon">${SHIELD}</span>
-        <div class="tb-text"><b>Let ${esc(name)} work in <span class="tb-folder"></span>?</b><span>It can read, edit and run files in this folder. AIT remembers your answer.</span></div>
+        <div class="tb-text"><b>Let ${esc(name)} work in <span class="tb-folder"></span>?</b><span>It can read, edit and run files in this folder. Cmdhive remembers your answer.</span></div>
         <button class="btn quiet tb-change">Change folder</button>
         <button class="btn go tb-trust">Trust folder</button>
       </div>
@@ -405,7 +405,7 @@ function renderMarkdown(b, text, finished) {
 }
 
 // mdInto renders markdown into el; its links open in the browser, never in
-// AIT's own window.
+// Cmdhive's own window.
 function mdInto(el, text) {
   el.innerHTML = marked.parse(text || "");
   el.querySelectorAll("a").forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); RT().BrowserOpenURL(a.href); }));
@@ -911,7 +911,7 @@ function chatProvider(tab, id, name, fromName, reason) {
 }
 
 // replay draws a conversation in slices, yielding between them, so a long
-// one keeps AIT responsive and the loading bar shows how far it is.
+// one keeps Cmdhive responsive and the loading bar shows how far it is.
 async function replay(tab, evs) {
   const c = tab.chat, bar = c.loadingEl?.querySelector("progress");
   c.scroll.style.display = "none"; // laid out once at the end, not after every slice
@@ -1122,7 +1122,7 @@ function runLocal(tab, text) {
   return false;
 }
 
-let reviewOn = false; // /supereview, read from AIT when the page starts
+let reviewOn = false; // /supereview, read from Cmdhive when the page starts
 window.go?.main?.App?.ReviewOn?.().then((on) => { reviewOn = on; }).catch(() => {});
 
 function updatePalette(tab) {
@@ -1134,7 +1134,7 @@ function updatePalette(tab) {
     desc: l.name === "supereview" ? (reviewOn ? "On · " : "Off · ") + l.desc : l.desc })), ...c.commands.map((n) => ({ name: n, desc: "" }))]
     .filter((x) => x.name.toLowerCase().includes(q)).slice(0, 8);
   if (!items.length) { c.palette.hidden = true; return; }
-  c.palette.innerHTML = items.map((x) => `<div class="pi ${x.disabled ? "disabled" : ""}"><b>/${esc(x.name)}</b><span>${esc(x.desc || "")}</span>${x.local ? '<i>AIT</i>' : ""}</div>`).join("");
+  c.palette.innerHTML = items.map((x) => `<div class="pi ${x.disabled ? "disabled" : ""}"><b>/${esc(x.name)}</b><span>${esc(x.desc || "")}</span>${x.local ? '<i>Cmdhive</i>' : ""}</div>`).join("");
   c.palette.items = items;
   c.palSel = 0;
   c.palette.querySelectorAll(".pi").forEach((el, i) => el.addEventListener("mousedown", (e) => { e.preventDefault(); c.palSel = i; pickPalette(tab); }));
@@ -1364,7 +1364,7 @@ async function mcpPop(tab, refresh) {
     return `<div class="mp-def mcp-row"><span class="mcp-dot ${dot}"></span><span class="mcp-t"><b>${esc(m.name)}</b><span>${esc(st)}</span></span>${fix}
       <button class="switch ${isOff ? "" : "on"}" role="switch" aria-checked="${!isOff}" data-name="${esc(m.name)}" title="${isOff ? "Switch on" : "Switch off"}"><i></i></button></div>`;
   };
-  // Grouped by what each server is for (sorted by AIT from its name, address and tools).
+  // Grouped by what each server is for (sorted by Cmdhive from its name, address and tools).
   const groups = MCP_GROUPS.map((g) => [g, (c.mcp || []).filter((m) => (MCP_GROUPS.includes(m.category) ? m.category : "Other") === g)]).filter(([, list]) => list.length);
   const rows = groups.map(([g, list]) => (groups.length > 1 ? `<div class="mcp-cat">${esc(g)}<span>${list.length}</span></div>` : "") + list.map(row).join("")).join("");
   const scroll = refresh && pop.kind === "mcp" ? pop.querySelector(".mp-list")?.scrollTop || 0 : 0; // a switch re-lists: stay put

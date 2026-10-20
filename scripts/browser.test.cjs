@@ -1,8 +1,8 @@
 // End-to-end test of the AIs' browser gate: gate.cjs + Playwright's MCP server in
-// a real headless Chrome/Edge, against a fake AIT server. (AIT's own browser
+// a real headless Chrome/Edge, against a fake Cmdhive server. (Cmdhive's own browser
 // surface is tested in browserview_manual_test.go.)
-// Needs Node, Chrome or Edge, and @playwright/mcp in AIT's browser folder
-// (AIT installs it itself); skipped when any is missing.
+// Needs Node, Chrome or Edge, and @playwright/mcp in Cmdhive's browser folder
+// (Cmdhive installs it itself); skipped when any is missing.
 const assert = require("assert");
 const fs = require("fs");
 const http = require("http");
@@ -10,7 +10,7 @@ const os = require("os");
 const path = require("path");
 const { spawn } = require("child_process");
 
-const dir = path.join(process.env.APPDATA || "", "AIT", "browser");
+const dir = path.join(process.env.APPDATA || "", "AIT", "browser"); // the data folder keeps its old name
 const cli = path.join(dir, "node_modules", "@playwright", "mcp", "cli.js");
 const exe = [
   [process.env.ProgramFiles, "Google/Chrome/Application/chrome.exe"], [process.env["ProgramFiles(x86)"], "Google/Chrome/Application/chrome.exe"],
@@ -61,7 +61,7 @@ const dev = http.createServer((req, res) => { res.setHeader("content-type", "tex
     gate.stdin.write(JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }) + "\n");
 
     const names = (await rpc("tools/list", {})).result.tools.map((t) => t.name);
-    assert.equal(opened, 0, "AIT's browser is not started by listing the tools");
+    assert.equal(opened, 0, "Cmdhive's browser is not started by listing the tools");
     assert.ok(names.includes("browser_navigate") && names.includes("browser_click"), "the browser tools are offered");
     for (const hidden of ["browser_run_code_unsafe", "browser_file_upload", "browser_drop"]) assert.ok(!names.includes(hidden), hidden + " is hidden");
     assert.ok((await tool("browser_run_code_unsafe", { code: "1" })).err, "a hidden tool cannot be called");
@@ -79,11 +79,11 @@ const dev = http.createServer((req, res) => { res.setHeader("content-type", "tex
     const a = await tool("browser_navigate", { url: "https://example.com" });
     assert.ok(!a.err && /Page URL: https:\/\/example\.com/.test(a.text), "an allowed site opens: " + a.text.slice(0, 120));
     assert.deepEqual(asked, ["example.com"], "the first visit asks");
-    assert.equal(opened, beforeNav + 1, "AIT is asked to make sure its window exists before every call");
+    assert.equal(opened, beforeNav + 1, "Cmdhive is asked to make sure its window exists before every call");
     await tool("browser_navigate", { url: "https://www.example.com/" });
     const afterSecond = opened;
     assert.deepEqual(asked, ["example.com"], "an allowed site is not asked again, with or without www");
-    assert.equal(afterSecond, beforeNav + 2, "and again for the next call (a window AIT closed in between would come back)");
+    assert.equal(afterSecond, beforeNav + 2, "and again for the next call (a window Cmdhive closed in between would come back)");
 
     const shot = await tool("browser_take_screenshot", {});
     assert.ok(!shot.err && fronted === 1, "a screenshot first brings the window back: fronted=" + fronted + " " + shot.text.slice(0, 80));
@@ -107,10 +107,10 @@ const dev = http.createServer((req, res) => { res.setHeader("content-type", "tex
     const where = await tool("browser_evaluate", { function: "() => location.href" });
     assert.ok(/about:blank/.test(where.text), "and the page is sent back to a blank page: " + where.text);
 
-    // Closing: AIT is told, and the next call asks it to open a window again.
+    // Closing: Cmdhive is told, and the next call asks it to open a window again.
     const before = opened;
     const closeRes = await tool("browser_close", {});
-    assert.ok(!closeRes.err && closed === 1, "closing the browser tells AIT: closed=" + closed + " " + closeRes.text.slice(0, 100));
+    assert.ok(!closeRes.err && closed === 1, "closing the browser tells Cmdhive: closed=" + closed + " " + closeRes.text.slice(0, 100));
     const again = await tool("browser_navigate", { url: "https://www.example.com/" });
     assert.ok(!again.err && opened > before, "the next call opens the browser again: opened=" + opened + " (was " + before + ") " + again.text.slice(0, 100));
 

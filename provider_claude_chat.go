@@ -223,7 +223,7 @@ func (c *claude) ChatControl(st *ChatState, what string) []byte {
 	return claudeControl(newUUID(), map[string]any{"subtype": "interrupt"})
 }
 
-// claudeMcpOff switches off the servers the user turned off in AIT. A server
+// claudeMcpOff switches off the servers the user turned off in Cmdhive. A server
 // switched off while still connecting comes back on when it connects, so it
 // waits until none is connecting (status nil = just started), then switches
 // off what is on and checks once more.
@@ -529,7 +529,7 @@ func assistantEvents(content json.RawMessage, history bool) []Ev {
 			if history && strings.TrimSpace(b.Text) != "" {
 				out = append(out, Ev{"k": "text", "text": b.Text})
 			} else if !history {
-				// The whole block, as AIT reads requests in replies from it
+				// The whole block, as Cmdhive reads requests in replies from it
 				// (the review marker) even when no deltas streamed.
 				out = append(out, Ev{"k": "final", "text": b.Text})
 			}
@@ -686,7 +686,7 @@ func claudeHistory(f io.Reader) []Ev {
 	return merged
 }
 
-// claudeAnswer reads the answers to AIT's own requests: the model list from
+// claudeAnswer reads the answers to Cmdhive's own requests: the model list from
 // initialize ("efforts": levels by model id, alias and name; "" is the
 // default model) and the effort in effect from get_settings ("effort"; ""
 // when the model has no effort levels).

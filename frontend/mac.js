@@ -1,4 +1,4 @@
-// Mac only (does nothing elsewhere): AIT's icons are Segoe Fluent glyphs, a font
+// Mac only (does nothing elsewhere): Cmdhive's icons are Segoe Fluent glyphs, a font
 // that macOS does not have, so they are drawn as small SVGs instead; ⌘ stands in
 // for Ctrl in the shortcuts.
 (() => {
@@ -93,7 +93,7 @@
     }
   }
 
-  // Cmd does what Ctrl does in AIT's shortcuts, except where the Mac has its
+  // Cmd does what Ctrl does in Cmdhive's shortcuts, except where the Mac has its
   // own meaning (copy, paste, cut, select all, undo), and never in the terminal,
   // where Ctrl stays Ctrl.
   window.addEventListener("keydown", (e) => {

@@ -212,7 +212,7 @@ func (a *App) profiles() []Profile {
 	return append(out, shellProfiles()...)
 }
 
-// secondLaunch brings the open window forward when AIT is started again.
+// secondLaunch brings the open window forward when Cmdhive is started again.
 func (a *App) secondLaunch(options.SecondInstanceData) {
 	if a.ctx == nil {
 		return
@@ -451,7 +451,7 @@ type AccountView struct {
 	HasQuota  bool    `json:"hasQuota"`
 }
 
-// Accounts lists the accounts tabID can move between, in the order AIT tries
+// Accounts lists the accounts tabID can move between, in the order Cmdhive tries
 // them when one runs out: this AI's accounts first (they resume the exact
 // conversation), then, for chat tabs, the other installed AIs' in the
 // user's AI order (they continue from a handover). The one in use is marked.
@@ -870,7 +870,7 @@ func (a *App) pump(t *Tab, p *PTY, gen int64, ans Provider) {
 					switch {
 					case key != "" && t.autoTrust.Load():
 						if t.adopted.Load() {
-							a.emit("tab:autotrust", t.id) // the page covers the prompt while AIT answers it
+							a.emit("tab:autotrust", t.id) // the page covers the prompt while Cmdhive answers it
 						}
 						time.Sleep(trustSettle) // only while the prompt is up
 						p.Write([]byte(key))
@@ -911,7 +911,7 @@ func (a *App) prompt(t *Tab) {
 	}
 }
 
-// AnswerTrust is the trust card's answer. Yes: AIT remembers the folder
+// AnswerTrust is the trust card's answer. Yes: Cmdhive remembers the folder
 // and steps through the agent's own prompt, one key at a time, judging each
 // from the screen it has. No: the page closes the tab.
 func (a *App) AnswerTrust(id int, yes bool) {

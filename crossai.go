@@ -11,7 +11,7 @@ import (
 
 // Moving a conversation to another AI. Each AI stores conversations in its
 // own format, so the history can't be handed over as a file the next AI
-// resumes. Instead AIT writes the conversation out as plain markdown — what
+// resumes. Instead Cmdhive writes the conversation out as plain markdown — what
 // the user asked, the answers, the commands run, the files changed — and the
 // next AI starts a fresh session told to read it and carry on.
 
@@ -112,7 +112,7 @@ func (a *App) crossOver(t *Tab, to Provider, acct Account, reason string) error 
 			"including what was already done, is in this file: %s\n\n"+
 			"This is the preparation turn only. Read the conversation included below, identify the latest "+
 			"request and unfinished work, and retain the constraints and completed steps. Do not use tools "+
-			"or begin work yet. Reply only READY when you have reviewed it. AIT will send a separate "+
+			"or begin work yet. Reply only READY when you have reviewed it. Cmdhive will send a separate "+
 			"message to continue automatically.\n\n<conversation>\n%s\n</conversation>", from.Name(), reason, file, history)
 	if err := a.relaunch(t, acct, ""); err != nil {
 		t.reading, t.handover = false, ""
@@ -266,7 +266,7 @@ func firstLine(s string) string {
 	return s
 }
 
-// Hide AIT's internal preparation and continuation prompts when a chat is reopened.
+// Hide Cmdhive's internal preparation and continuation prompts when a chat is reopened.
 func visibleHistory(evs []Ev) []Ev {
 	out := make([]Ev, 0, len(evs))
 	preparing := false

@@ -737,7 +737,7 @@ func TestUpdaterVerifiesDownloads(t *testing.T) {
 	}
 
 	a.prepared = ""
-	repoName = "renamed-owner/AIT" // the repository was renamed: still its own releases
+	repoName = "renamed-owner/Cmdhive" // the repository was renamed: still its own releases
 	if _, err := a.prepareUpdate(); err != nil {
 		t.Fatalf("download refused after a rename: %v", err)
 	}
@@ -752,7 +752,7 @@ func TestUpdaterVerifiesDownloads(t *testing.T) {
 	a.prepared = ""
 	checksum = good
 	downloadBase = "https://github.com" // assets now come from somewhere else
-	if _, err := a.prepareUpdate(); err == nil || !strings.Contains(err.Error(), "not from AIT's own releases") {
+	if _, err := a.prepareUpdate(); err == nil || !strings.Contains(err.Error(), "not from Cmdhive's own releases") {
 		t.Fatalf("foreign download accepted: %v", err)
 	}
 }

@@ -1,7 +1,7 @@
 "use strict";
 
 // First-run setup. Shown once, before the first tab, to a new user: nothing
-// about anyone else is in AIT; everything here is the user's own answer.
+// about anyone else is in Cmdhive; everything here is the user's own answer.
 
 const AIT_ASCII = [
   " █████╗ ██╗████████╗",
@@ -36,7 +36,7 @@ function runSetup() {
     };
 
     function intro(box) {
-      box.innerHTML = `<pre class="su-ascii">${AIT_ASCII}</pre><h1>Welcome to AIT</h1><p>A few questions to set things up. You can change all of it later in Settings.</p>${nav("Get started", true)}`;
+      box.innerHTML = `<pre class="su-ascii">${AIT_ASCII}</pre><h1>Welcome to Cmdhive</h1><p>A few questions to set things up. You can change all of it later in Settings.</p>${nav("Get started", true)}`;
       wire(box);
     }
     function name(box) {
@@ -78,16 +78,16 @@ function runSetup() {
       wire(box);
     }
     async function agents(box) {
-      box.innerHTML = `<h2>Your AI tools</h2><p>AIT runs each AI's own command-line tool, with the accounts you sign in to. Missing tools can be installed now; switch off any you don't want.</p><div class="su-list su-agents"></div>${nav("Start using AIT")}`;
+      box.innerHTML = `<h2>Your AI tools</h2><p>Cmdhive runs each AI's own command-line tool, with the accounts you sign in to. Missing tools can be installed now; switch off any you don't want.</p><div class="su-list su-agents"></div>${nav("Start using Cmdhive")}`;
       wire(box);
       const list = await API().Agents();
       const holder = box.querySelector(".su-agents"), go = box.querySelector(".su-next");
       const want = new Set(), rows = {};
-      const label = () => { go.firstChild.textContent = want.size ? "Install and start " : "Start using AIT "; };
+      const label = () => { go.firstChild.textContent = want.size ? "Install and start " : "Start using Cmdhive "; };
       for (const a of list) {
         const row = document.createElement("div");
         row.className = "su-agent";
-        const state = !a.installed ? "Not installed. AIT will install it." : a.signedIn ? `Signed in${a.email ? " as " + a.email : ""}` : "Installed. You'll sign in on first use.";
+        const state = !a.installed ? "Not installed. Cmdhive will install it." : a.signedIn ? `Signed in${a.email ? " as " + a.email : ""}` : "Installed. You'll sign in on first use.";
         row.innerHTML = `<span class="icon">${icon(a.id)}</span><span><b>${esc(a.name)}</b><span class="su-state">${esc(state)}</span></span>`;
         if (!a.installed) {
           want.add(a.id);
@@ -98,7 +98,7 @@ function runSetup() {
             const on = !want.has(a.id);
             on ? want.add(a.id) : want.delete(a.id);
             sw.classList.toggle("on", on);
-            row.querySelector(".su-state").textContent = on ? "Not installed. AIT will install it." : "Not installed. Skipped.";
+            row.querySelector(".su-state").textContent = on ? "Not installed. Cmdhive will install it." : "Not installed. Skipped.";
             label();
           });
           row.append(sw);

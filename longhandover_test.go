@@ -9,7 +9,7 @@ import (
 )
 
 // A chat that began as a handover has the whole earlier conversation in its
-// first message. When that line was longer than the part AIT read, the chat
+// first message. When that line was longer than the part Cmdhive read, the chat
 // had no title: History hid it and reopening it failed ("no longer on disk").
 func TestLongHandoverChatStaysListed(t *testing.T) {
 	home := t.TempDir()

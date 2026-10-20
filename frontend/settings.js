@@ -55,9 +55,9 @@ async function openSettings() {
       </section>
       <section>
         <h4>Window</h4>
-        <div class="row"><div><b>Always on top</b><span>AIT stays above other windows, even when you click elsewhere.</span></div>${toggleCtl("alwaysOnTop", s.alwaysOnTop)}</div>
-        <div class="row"><div><b>Reopen tabs</b><span>Start with the AI chats that were open when AIT last closed.</span></div>${toggleCtl("reopenTabs", s.reopenTabs)}</div>
-        <div class="row"><div><b>Notifications</b><span>A Windows notification when the AI finishes or needs you while AIT is in the background.</span></div>${toggleCtl("notify", s.notify)}</div>
+        <div class="row"><div><b>Always on top</b><span>Cmdhive stays above other windows, even when you click elsewhere.</span></div>${toggleCtl("alwaysOnTop", s.alwaysOnTop)}</div>
+        <div class="row"><div><b>Reopen tabs</b><span>Start with the AI chats that were open when Cmdhive last closed.</span></div>${toggleCtl("reopenTabs", s.reopenTabs)}</div>
+        <div class="row"><div><b>Notifications</b><span>A Windows notification when the AI finishes or needs you while Cmdhive is in the background.</span></div>${toggleCtl("notify", s.notify)}</div>
         <div class="row"><div><b>Keep an agent ready</b><span>Starts the next agent in the background so new tabs open instantly. Uses one extra process.</span></div>${toggleCtl("prewarm", s.prewarm)}</div>
       </section>
       <section>
@@ -70,7 +70,7 @@ async function openSettings() {
         ${ui.profiles.filter((p) => p.agent && p.installed && (p.models || []).length > 1).map((p) => `
         <div class="row"><div><b>Default ${esc(p.name)} model</b><span>New tabs start on this. Switch any time with the model button.</span></div>
           <select class="st-select" data-model="${p.id}">${p.models.map((m) => `<option value="${esc(m.id)}" ${((s.models || {})[p.id] || "") === m.id ? "selected" : ""}>${esc(m.name)}</option>`).join("")}</select></div>`).join("")}
-        <div class="row"><div><b>Chat view</b><span>Native draws the conversation in AIT. Terminal shows the agent's own screen.</span></div>
+        <div class="row"><div><b>Chat view</b><span>Native draws the conversation in Cmdhive. Terminal shows the agent's own screen.</span></div>
           ${seg("chatView", s.chatView, [["native", "Native"], ["terminal", "Terminal"]])}</div>
         <div class="row"><div><b>File access</b><span>Everywhere lets the AI work in any folder on your drives. Approval prompts still apply.</span></div>
           ${seg("access", s.access || "everywhere", [["everywhere", "Everywhere"], ["folder", "Working folder"]])}</div>
@@ -90,14 +90,14 @@ async function openSettings() {
         <div class="row"><div><b>Sites always allowed</b><span class="st-sites-note">${(s.browserSites || []).length ? "The AIs open these without asking. Click one to ask again." : "None yet: the AIs ask the first time they open each site."}</span></div>
           <span class="st-btns"><button class="btn quiet st-bclear">Clear browser data</button></span></div>
         <div class="st-sites">${siteChips(s.browserSites)}</div>` : `
-        <div class="row"><div><b>Not available</b><span>The AIs' browser needs Node.js on this PC; it sets itself up the first time AIT starts with it.</span></div></div>`}
+        <div class="row"><div><b>Not available</b><span>The AIs' browser needs Node.js on this PC; it sets itself up the first time Cmdhive starts with it.</span></div></div>`}
       </section>
       <section>
         <h4>Updates</h4>
-        <div class="row"><div><b>AIT <span class="st-ver"></span></b><span class="st-upd">Checks GitHub for new versions. Nothing installs without your OK.</span></div>
+        <div class="row"><div><b>Cmdhive <span class="st-ver"></span></b><span class="st-upd">Checks GitHub for new versions. Nothing installs without your OK.</span></div>
           <button class="btn quiet st-check">Check now</button></div>
         <div class="row"><div><b>Check automatically</b><span>A button appears in the title bar when an update is ready.</span></div>${toggleCtl("autoUpdate", s.autoUpdate !== false)}</div>
-        <div class="row"><div><b>Install updates automatically</b><span>Downloads and checks updates in the background, then installs them when you close AIT.</span></div>${toggleCtl("autoInstall", !!s.autoInstall)}</div>
+        <div class="row"><div><b>Install updates automatically</b><span>Downloads and checks updates in the background, then installs them when you close Cmdhive.</span></div>${toggleCtl("autoInstall", !!s.autoInstall)}</div>
       </section>
       <p class="st-note">Your name, default models, chat view, file access and permissions apply to tabs opened from now on.</p>
     </div>`;

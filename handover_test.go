@@ -230,7 +230,7 @@ func TestModelWithoutAccountAndReviewRule(t *testing.T) {
 }
 
 // Another program's transcript in the same folder (a /supereview reviewer,
-// Claude Code run outside AIT) must not replace the tab's own conversation.
+// Claude Code run outside Cmdhive) must not replace the tab's own conversation.
 func TestNativeChatKeepsItsOwnTranscript(t *testing.T) {
 	root, home, cwd := t.TempDir(), t.TempDir(), t.TempDir()
 	os.MkdirAll(filepath.Join(home, ".claude"), 0o755)

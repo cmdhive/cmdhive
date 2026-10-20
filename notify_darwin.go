@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// notifyBackground shows a notification unless AIT is in front or the user
+// notifyBackground shows a notification unless Cmdhive is in front or the user
 // turned notifications off.
 func (a *App) notifyBackground(title, text string) {
 	if !a.store.Config().notify() || inFront() {
@@ -47,7 +47,7 @@ func (a *App) notifyTab(t *Tab, done, failed, text, errText string) {
 		text = cutText(text, 180) + "…"
 	}
 	if text == "" {
-		text = "Open AIT to see the result."
+		text = "Open Cmdhive to see the result."
 	}
 	a.notifiedTab.Store(int64(t.id))
 	a.notifyBackground(title, text)

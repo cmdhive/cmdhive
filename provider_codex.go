@@ -17,7 +17,7 @@ import (
 // subscription it signs in with.
 //
 // Transcripts are "rollout" files: sessions/YYYY/MM/DD/rollout-<time>-<uuid>.jsonl.
-// Codex cannot be handed a session id up front, so AIT finds a new
+// Codex cannot be handed a session id up front, so Cmdhive finds a new
 // session's file by creation time, then resumes it with `codex resume <id>`.
 type codex struct{ userHome string }
 
@@ -52,7 +52,7 @@ func (c *codex) Command() []string {
 func (c *codex) SignedIn(home string) bool { return fileExists(filepath.Join(home, "auth.json")) }
 
 // Email is not shown for Codex: its address only exists inside the login
-// token, and AIT never opens login or token files (it only checks that one
+// token, and Cmdhive never opens login or token files (it only checks that one
 // exists, in SignedIn).
 func (c *codex) Email(home string) string { return "" }
 

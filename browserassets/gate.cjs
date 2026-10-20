@@ -1,10 +1,10 @@
-// AIT's browser gate. It sits between an AI and Playwright's MCP server and
-// passes everything through, except (unless the user runs AIT with permissions
-// off, which AIT reports through /mode: then only the first and last two apply):
-//  - the browser itself (a window of AIT's) starts on the first call, and is
+// Cmdhive's browser gate. It sits between an AI and Playwright's MCP server and
+// passes everything through, except (unless the user runs Cmdhive with permissions
+// off, which Cmdhive reports through /mode: then only the first and last two apply):
+//  - the browser itself (a window of Cmdhive's) starts on the first call, and is
 //    brought back from the taskbar before a screenshot and closed (for the
 //    next call to reopen) when the AI calls browser_close;
-//  - the first visit to a website asks the user (through AIT) before the
+//  - the first visit to a website asks the user (through Cmdhive) before the
 //    page loads, whether the AI typed the address or a click led there;
 //  - tools that could read local files or run arbitrary code are not offered;
 //  - one tool is added: browser_ask_user, with which the AI hands a step it
@@ -28,7 +28,7 @@ const HELP_TOOL = {
     "Never try to get past a CAPTCHA or enter credentials yourself. After it returns, take a fresh snapshot.",
   inputSchema: { type: "object", properties: { message: { type: "string", description: "What the user should do, in one or two plain sentences." } }, required: ["message"] },
 };
-// With permissions off the AI browses freely (AIT says so at each call, as the setting can change).
+// With permissions off the AI browses freely (Cmdhive says so at each call, as the setting can change).
 const free = () => new Promise((resolve) => {
   http.get(`${BASE}/mode?key=${KEY}`, (res) => { let b = ""; res.on("data", (d) => (b += d)); res.on("end", () => resolve(b.trim() === "free")); }).on("error", () => resolve(false));
 });
@@ -46,12 +46,12 @@ function judge(raw) {
   let u;
   try { u = new URL(raw); } catch { try { u = new URL("https://" + raw); } catch { return { blocked: "That is not a web address." }; } }
   if (u.protocol === "about:") return {};
-  if (u.protocol !== "http:" && u.protocol !== "https:") return { blocked: `${u.protocol} addresses are not allowed in AIT's browser.` };
+  if (u.protocol !== "http:" && u.protocol !== "https:") return { blocked: `${u.protocol} addresses are not allowed in Cmdhive's browser.` };
   if (LOCAL.test(u.hostname)) return {};
   return { host: u.hostname.toLowerCase().replace(/^www\./, "") };
 }
 
-// Asks AIT something that a person answers; resolves true for "allow".
+// Asks Cmdhive something that a person answers; resolves true for "allow".
 function ask(path, query) {
   return new Promise((resolve) => {
     const req = http.get(`${BASE}/${path}?key=${KEY}&${query}`, (res) => {
@@ -76,8 +76,8 @@ async function allowed(host) {
 
 const denied = (host) => `The user did not allow ${host}. Do not try that site again or work around it; tell the user instead.`;
 
-// AIT makes sure its browser window exists before every call (cheap and
-// idempotent): the window can be closed on AIT's side (idle for a while, the
+// Cmdhive makes sure its browser window exists before every call (cheap and
+// idempotent): the window can be closed on Cmdhive's side (idle for a while, the
 // chat restarted) while the AI still thinks it is open.
 const open = () => new Promise((resolve) => {
   http.get(`${BASE}/open?key=${KEY}`, (res) => { res.resume(); res.on("end", () => resolve(res.statusCode === 200)); }).on("error", () => resolve(false));
@@ -87,7 +87,7 @@ const front = () => new Promise((resolve) => {
   http.get(`${BASE}/front?key=${KEY}`, (res) => { res.resume(); res.on("end", resolve); }).on("error", resolve);
 });
 
-// Tells AIT the AI closed its browser; the next call opens a new window.
+// Tells Cmdhive the AI closed its browser; the next call opens a new window.
 const closeWin = () => new Promise((resolve) => {
   http.get(`${BASE}/close?key=${KEY}`, (res) => { res.resume(); res.on("end", resolve); }).on("error", resolve);
 });
@@ -104,8 +104,8 @@ readline.createInterface({ input: process.stdin }).on("line", async (line) => {
   if (m.method === "tools/call") {
     const name = m.params && m.params.name, a = (m.params && m.params.arguments) || {};
     const isFree = await free();
-    if (!isFree && HIDDEN.has(name)) return refuse(m.id, "That tool is not available in AIT's browser.");
-    if (!(await open())) return refuse(m.id, "AIT could not start its browser. Tell the user.");
+    if (!isFree && HIDDEN.has(name)) return refuse(m.id, "That tool is not available in Cmdhive's browser.");
+    if (!(await open())) return refuse(m.id, "Cmdhive could not start its browser. Tell the user.");
     if (name === "browser_take_screenshot") await front(); // a minimised window does not draw
     if (name === "browser_ask_user") {
       const text = String(a.message || "Help with this step").slice(0, 300);
@@ -134,7 +134,7 @@ readline.createInterface({ input: child.stdout }).on("line", async (line) => {
     m.result.tools = m.result.tools.filter((t) => isFree || !HIDDEN.has(t.name)).concat(HELP_TOOL);
     return toAI(m);
   }
-  if (closes.delete(m.id)) await closeWin(); // Playwright has let go: AIT closes the window
+  if (closes.delete(m.id)) await closeWin(); // Playwright has let go: Cmdhive closes the window
   if (calls.delete(m.id) && m.result && Array.isArray(m.result.content)) {
     // A click or script can lead somewhere new: the AI must not see a page
     // the user has not allowed.

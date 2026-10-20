@@ -8,7 +8,7 @@ import (
 
 // On a Mac Claude Code keeps its login in the Keychain, so there is no
 // .credentials.json; the account in claude's state file still shows the
-// user is signed in, and AIT must create their account from it.
+// user is signed in, and Cmdhive must create their account from it.
 func TestClaudeSignedInWithoutCredentialsFile(t *testing.T) {
 	c := &claude{userHome: t.TempDir()}
 	extra := t.TempDir()

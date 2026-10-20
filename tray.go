@@ -23,7 +23,7 @@ import (
 
 // The tray icon and its status panel. The panel is a window of its own (a
 // small WebView2 next to the tray), so the main window never changes when it
-// opens. Its page is drawn with AIT's own stylesheets, and the main page
+// opens. Its page is drawn with Cmdhive's own stylesheets, and the main page
 // sends it the live status and theme while it is open (TrayState).
 // Everything here runs on the tray's thread, which owns the panel.
 
@@ -65,7 +65,7 @@ type trayPanel struct {
 // trayGone closes once the icon has been removed from the tray.
 var trayGone = make(chan struct{})
 
-// stopTray removes the icon before AIT exits; an exit that beats it leaves a
+// stopTray removes the icon before Cmdhive exits; an exit that beats it leaves a
 // dead icon in the tray until the mouse passes over it.
 func stopTray() {
 	systray.Quit()
@@ -82,7 +82,7 @@ func (a *App) startTray() {
 		procCoInitializeEx.Call(0, coinitApartmentThreaded) // WebView2 needs an STA thread
 		systray.Run(func() {
 			systray.SetIcon(trayIcon)
-			systray.SetTooltip("AIT")
+			systray.SetTooltip("Cmdhive")
 			// Either button toggles the panel, as tray widgets do.
 			systray.SetOnClick(func(systray.IMenu) { a.togglePanel() })
 			systray.SetOnRClick(func(systray.IMenu) { a.togglePanel() })
@@ -212,7 +212,7 @@ func (a *App) createPanel() bool {
 	procRegisterClassExW.Call(uintptr(unsafe.Pointer(&wc)))
 	const wsPopup, wsClipChildren = 0x80000000, 0x02000000
 	const wsExToolWindow, wsExTopmost = 0x00000080, 0x00000008
-	title, _ := windows.UTF16PtrFromString("AIT")
+	title, _ := windows.UTF16PtrFromString("Cmdhive")
 	h, _, _ := procCreateWindowExW.Call(wsExToolWindow|wsExTopmost, uintptr(unsafe.Pointer(cls)), uintptr(unsafe.Pointer(title)),
 		wsPopup|wsClipChildren, 0, 0, 300, 300, 0, 0, uintptr(inst), 0)
 	if h == 0 {
@@ -221,7 +221,7 @@ func (a *App) createPanel() bool {
 	p.hwnd = h
 
 	web := edge.NewChromium()
-	web.SetErrorCallback(func(err error) { log.Println("tray panel:", err) }) // never take AIT down
+	web.SetErrorCallback(func(err error) { log.Println("tray panel:", err) }) // never take Cmdhive down
 	web.DataPath = filepath.Join(a.store.root, "panel-webview")
 	web.MessageCallback = func(msg string, _ *edge.ICoreWebView2, _ *edge.ICoreWebView2WebMessageReceivedEventArgs) {
 		a.panelMessage(msg)
@@ -260,7 +260,7 @@ func (a *App) panelMessage(msg string) {
 		return
 	}
 	// A message or an answer typed in the panel goes to that tab's chat, as
-	// if typed in AIT; the panel stays open to show the reply.
+	// if typed in Cmdhive; the panel stays open to show the reply.
 	if rest, ok := strings.CutPrefix(msg, "send:"); ok {
 		var m struct {
 			Tab  int    `json:"tab"`
@@ -307,7 +307,7 @@ func (a *App) ShowApp() {
 	runtime.WindowShow(a.ctx)
 }
 
-// panelPage is the panel's HTML: AIT's own stylesheets plus the panel.
+// panelPage is the panel's HTML: Cmdhive's own stylesheets plus the panel.
 func panelPage() string {
 	read := func(name string) string {
 		b, _ := assets.ReadFile("frontend/" + name)
@@ -336,10 +336,10 @@ func (a *App) trayTooltip() {
 	}
 	switch len(names) {
 	case 0:
-		systray.SetTooltip("AIT")
+		systray.SetTooltip("Cmdhive")
 	case 1:
-		systray.SetTooltip("AIT — " + names[0] + " is working")
+		systray.SetTooltip("Cmdhive — " + names[0] + " is working")
 	default:
-		systray.SetTooltip(fmt.Sprintf("AIT — %d AIs working", len(names)))
+		systray.SetTooltip(fmt.Sprintf("Cmdhive — %d AIs working", len(names)))
 	}
 }

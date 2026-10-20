@@ -14,7 +14,7 @@ import (
 // tab, with the model switcher.
 //
 // Basic support: it starts the CLI on the chosen model. It does not yet do
-// automatic account handoff or history — Gemini was not installed where AIT
+// automatic account handoff or history — Gemini was not installed where Cmdhive
 // was built, so its transcript format and limit messages could not be
 // measured, and a guessed format is worse than none. Implementing Scan,
 // Chats, Carry and SessionID here is all that is missing.
@@ -87,7 +87,7 @@ func (g *gemini) Email(home string) string {
 func (g *gemini) Provision(home, cwd string, trusted bool) {}
 
 // Models: the CLI's own default first; the rest is what the user set in
-// Gemini's settings.json, so AIT never offers a model name it made up. Any
+// Gemini's settings.json, so Cmdhive never offers a model name it made up. Any
 // other model can be typed in the switcher's "Other model" field.
 func (g *gemini) Models() []Model {
 	out := []Model{{ID: "", Name: "Default", Desc: "Your Gemini settings"}}

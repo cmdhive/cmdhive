@@ -16,7 +16,7 @@ import (
 // conversation carried to the second account and continued there.
 func TestRealCarryAcrossAccounts(t *testing.T) {
 	home, _ := os.UserHomeDir()
-	s, err := newStoreAt(filepath.Join(os.Getenv("APPDATA"), "AIT"), home)
+	s, err := newStoreAt(filepath.Join(os.Getenv("APPDATA"), "Cmdhive"), home)
 	if err != nil {
 		t.Fatal(err)
 	}

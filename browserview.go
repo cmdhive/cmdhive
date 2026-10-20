@@ -26,7 +26,7 @@ import (
 // the steps the AI plans and takes and the questions it asks. It is an
 // ordinary top-level window (its own taskbar button, any size, any monitor).
 // Two WebView2s share it, side by side: the page, which the AI drives through
-// its remote-debugging port with Playwright, and AIT's own column. Everything
+// its remote-debugging port with Playwright, and Cmdhive's own column. Everything
 // that touches a window runs on one UI thread of its own.
 
 const (
@@ -132,7 +132,7 @@ type browserView struct {
 	key   string
 	hwnd  uintptr
 	page  *edge.Chromium // what the AI drives
-	col   *edge.Chromium // AIT's column on the right
+	col   *edge.Chromium // Cmdhive's column on the right
 	port  int
 	dir   string // the page's user data folder
 	temp  bool   // removed when the view closes
@@ -269,7 +269,7 @@ func (a *App) createBrowserView(l *browserLog, dir string, temp bool) (*browserV
 
 		// The page: private, with a debugging port the AI's tools connect to.
 		page := edge.NewChromium()
-		page.SetErrorCallback(func(e error) { log.Println("browser page:", e) }) // never take AIT down
+		page.SetErrorCallback(func(e error) { log.Println("browser page:", e) }) // never take Cmdhive down
 		page.DataPath = dir
 		page.AdditionalBrowserArgs = []string{
 			fmt.Sprintf("--remote-debugging-port=%d", v.port),
@@ -296,7 +296,7 @@ func (a *App) createBrowserView(l *browserLog, dir string, temp bool) (*browserV
 		page.Init(viewScript)
 		v.page = page
 
-		// AIT's column.
+		// Cmdhive's column.
 		col := edge.NewChromium()
 		col.SetErrorCallback(func(e error) { log.Println("browser column:", e) })
 		col.DataPath = filepath.Join(a.store.root, "browser-ui-webview")
@@ -503,7 +503,7 @@ func freePort() (int, error) {
 
 // closeBrowser removes a chat's browser (its window and, when private, its data).
 func (a *App) closeBrowser(key string) {
-	a.browserNote("browser %s removed (its chat was closed, restarted or AIT is quitting)", key[:min(8, len(key))])
+	a.browserNote("browser %s removed (its chat was closed, restarted or Cmdhive is quitting)", key[:min(8, len(key))])
 	a.browser.mu.Lock()
 	l := a.browser.logs[key]
 	delete(a.browser.logs, key)
@@ -523,7 +523,7 @@ func (a *App) closeBrowser(key string) {
 	}
 }
 
-// closeBrowsers is for when AIT quits.
+// closeBrowsers is for when Cmdhive quits.
 func (a *App) closeBrowsers() {
 	a.browser.mu.Lock()
 	keys := make([]string, 0, len(a.browser.logs))
@@ -538,7 +538,7 @@ func (a *App) closeBrowsers() {
 
 // ---- the column --------------------------------------------------------------
 
-// browserColumnPage is the column's HTML: AIT's own stylesheets plus the column.
+// browserColumnPage is the column's HTML: Cmdhive's own stylesheets plus the column.
 func browserColumnPage() string {
 	read := func(name string) string {
 		b, _ := assets.ReadFile("frontend/" + name)
@@ -629,8 +629,8 @@ func (a *App) browserColumnMessage(l *browserLog, v *browserView, msg string) {
 	}
 }
 
-// BrowserTheme is the main page telling AIT its colours, so the browser
-// window looks like AIT.
+// BrowserTheme is the main page telling Cmdhive its colours, so the browser
+// window looks like Cmdhive.
 func (a *App) BrowserTheme(theme string) {
 	a.browser.mu.Lock()
 	a.browser.theme = theme

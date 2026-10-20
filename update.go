@@ -19,19 +19,19 @@ import (
 
 // Updates.
 //
-// AIT's only network access of its own: it asks GitHub for the latest
+// Cmdhive's only network access of its own: it asks GitHub for the latest
 // release of UpdateRepo. Nothing is downloaded until the user clicks
 // Update, and then only:
 //   - the installer asset, from this repository's release downloads, over HTTPS;
 //   - its published SHA-256, which the download must match exactly.
 // The verified installer then runs (silently, keeping the user's data) and
-// restarts AIT. Users can turn the automatic check off in Settings.
+// restarts Cmdhive. Users can turn the automatic check off in Settings.
 
 // Version is set at build time: -ldflags "-X main.Version=1.2.3".
 var Version = "1.0.0"
 
 // UpdateRepo is the GitHub repository releases are published to.
-const UpdateRepo = "nwtaken/AIT"
+const UpdateRepo = "cmdhive/cmdhive"
 
 // repoID is GitHub's permanent number for UpdateRepo. Asking by number keeps
 // updates working when the account or repository is renamed; downloads must
@@ -76,7 +76,7 @@ func (a *App) startUpdateChecks() {
 				if u, err := a.CheckUpdate(); err == nil && u.Available {
 					if c.AutoInstall {
 						if _, err := a.prepareUpdate(); err == nil {
-							u.Ready = true // installs when AIT closes
+							u.Ready = true // installs when Cmdhive closes
 						}
 					}
 					a.emit("update:available", u)
@@ -90,7 +90,7 @@ func (a *App) startUpdateChecks() {
 	}()
 }
 
-// UpdateNudge is called when the AIT window comes to the front: a check
+// UpdateNudge is called when the Cmdhive window comes to the front: a check
 // that is due runs now instead of at the next hourly one.
 func (a *App) UpdateNudge() {
 	if last := a.lastCheck.Load(); last == 0 || time.Since(time.Unix(last, 0)) < nudgeAfter {
@@ -107,7 +107,7 @@ func (a *App) CheckUpdate() (UpdateInfo, error) {
 	info := UpdateInfo{Current: Version}
 	req, _ := http.NewRequest("GET", apiBase+"/repositories/"+repoID+"/releases/latest", nil)
 	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("User-Agent", "AIT/"+Version)
+	req.Header.Set("User-Agent", "Cmdhive/"+Version)
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return info, err
@@ -150,7 +150,7 @@ func (a *App) CheckUpdate() (UpdateInfo, error) {
 }
 
 // InstallUpdate downloads, verifies and runs the latest installer, then
-// quits so it can replace AIT. Only ever started by the user's click.
+// quits so it can replace Cmdhive. Only ever started by the user's click.
 func (a *App) InstallUpdate() error {
 	path, err := a.prepareUpdate()
 	if err != nil {
@@ -175,14 +175,14 @@ func (a *App) prepareUpdate() (string, error) {
 		return "", err
 	}
 	if !u.Available {
-		return "", errors.New("AIT is already up to date")
+		return "", errors.New("Cmdhive is already up to date")
 	}
 	if a.prepared != "" && a.preparedVer == u.Latest && fileExists(a.prepared) {
 		return a.prepared, nil
 	}
 	prefix := downloadBase + "/" + u.repo + "/releases/download/"
 	if u.repo == "" || !strings.HasPrefix(u.installerURL, prefix) || !strings.HasPrefix(u.checksumURL, prefix) {
-		return "", errors.New("the update is not from AIT's own releases; not installing it")
+		return "", errors.New("the update is not from Cmdhive's own releases; not installing it")
 	}
 	sum, err := fetch(u.checksumURL, 1<<10)
 	if err != nil {
@@ -210,8 +210,8 @@ func (a *App) prepareUpdate() (string, error) {
 	return path, nil
 }
 
-// installOnExit runs a prepared update as AIT closes (Settings: install
-// updates automatically). No relaunch: the user was closing AIT.
+// installOnExit runs a prepared update as Cmdhive closes (Settings: install
+// updates automatically). No relaunch: the user was closing Cmdhive.
 func (a *App) installOnExit() {
 	a.updMu.Lock()
 	path := a.prepared
@@ -221,7 +221,7 @@ func (a *App) installOnExit() {
 	}
 }
 
-// WhatsNew reports, once, that AIT was updated since it last ran, with that
+// WhatsNew reports, once, that Cmdhive was updated since it last ran, with that
 // release's notes from GitHub.
 func (a *App) WhatsNew() UpdateInfo {
 	c := a.store.Config()
@@ -237,7 +237,7 @@ func (a *App) WhatsNew() UpdateInfo {
 	info := UpdateInfo{Current: Version, Latest: Version, Available: true}
 	req, _ := http.NewRequest("GET", apiBase+"/repositories/"+repoID+"/releases/tags/v"+Version, nil)
 	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("User-Agent", "AIT/"+Version)
+	req.Header.Set("User-Agent", "Cmdhive/"+Version)
 	if resp, err := httpClient.Do(req); err == nil {
 		defer resp.Body.Close()
 		var rel struct {
@@ -254,7 +254,7 @@ func (a *App) AppVersion() string { return Version }
 
 func fetch(url string, limit int64) ([]byte, error) {
 	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Set("User-Agent", "AIT/"+Version)
+	req.Header.Set("User-Agent", "Cmdhive/"+Version)
 	c := &http.Client{Timeout: 10 * time.Minute}
 	resp, err := c.Do(req)
 	if err != nil {

@@ -1,48 +1,51 @@
-<p align="center"><img src="docs/banner.png" alt="AIT — the AI terminal for Windows" width="100%"></p>
+<p align="center"><img src="docs/banner.png" alt="Cmdhive — the AI terminal for Windows and Mac" width="100%"></p>
 
 <p align="center">
-  <a href="https://github.com/nwtaken/AIT/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/nwtaken/AIT?style=flat-square&color=d97757"></a>
-  <a href="https://github.com/nwtaken/AIT/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/nwtaken/AIT/total?style=flat-square&color=3b3b3b"></a>
+  <a href="https://github.com/cmdhive/cmdhive/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/cmdhive/cmdhive?style=flat-square&color=d97757"></a>
+  <a href="https://github.com/cmdhive/cmdhive/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/cmdhive/cmdhive/total?style=flat-square&color=3b3b3b"></a>
   <img alt="Windows 10 and 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-3b3b3b?style=flat-square">
+  <img alt="macOS 12 or newer" src="https://img.shields.io/badge/macOS-12%2B-3b3b3b?style=flat-square">
   <img alt="Built with Go" src="https://img.shields.io/badge/Go-Wails-3b3b3b?style=flat-square">
 </p>
 
-AIT is a terminal app for Windows built around AI coding agents. It runs Claude Code,
+**[cmdhive.org](https://cmdhive.org)** · Cmdhive was called AIT until version 1.8.0; nothing changes for you.
+
+Cmdhive is a terminal app for Windows and Mac built around AI coding agents. It runs Claude Code,
 Codex (ChatGPT) and Gemini CLI in a clean, fast chat view instead of a raw console,
 and keeps a conversation going across several of your accounts: when one account
-reaches its usage limit, AIT moves the same conversation to the next one and carries on.
+reaches its usage limit, Cmdhive moves the same conversation to the next one and carries on.
 
-<p align="center"><img src="docs/screenshots/chat-terminal.png" alt="AIT chat in terminal style" width="90%"></p>
+<p align="center"><img src="docs/screenshots/chat-terminal.png" alt="Cmdhive chat in terminal style" width="90%"></p>
 
 ## Download
 
-**[Download AIT for Windows](https://github.com/nwtaken/AIT/releases/latest/download/AIT-setup.exe)**,
+**[Download Cmdhive for Windows](https://github.com/cmdhive/cmdhive/releases/latest/download/Cmdhive-setup.exe)**,
 then run the installer. It installs for your user only, so it doesn't need administrator rights.
 
-AIT updates itself: when a new version is out, an **Update** button appears in the title bar.
+Cmdhive updates itself: when a new version is out, an **Update** button appears in the title bar.
 
-> AIT isn't code-signed yet, so Windows SmartScreen may say it doesn't recognise the app the
+> Cmdhive isn't code-signed yet, so Windows SmartScreen may say it doesn't recognise the app the
 > first time. Choose **More info → Run anyway**. Every release lists its SHA-256 checksum.
 
 ### On a Mac
 
-**[Download AIT for Mac](https://github.com/nwtaken/AIT/releases/latest/download/AIT-mac.zip)**
-(Apple silicon and Intel, macOS 12 or newer). Unzip it and drag **AIT** to Applications.
+**[Download Cmdhive for Mac](https://github.com/cmdhive/cmdhive/releases/latest/download/Cmdhive-mac.zip)**
+(Apple silicon and Intel, macOS 12 or newer). Unzip it and drag **Cmdhive** to Applications.
 
-AIT isn't signed with an Apple developer certificate, so the first time: right-click AIT →
+Cmdhive isn't signed with an Apple developer certificate, so the first time: right-click Cmdhive →
 **Open** → **Open**. (On macOS 15, if that is not offered, open **System Settings → Privacy &
 Security** and choose **Open Anyway**.) After that it starts normally and updates itself.
 
 What differs from Windows: the AIs' browser opens in your own Google Chrome (or Edge, Brave,
-Chromium) instead of AIT's live window with the steps column; the steps and any question for
+Chromium) instead of Cmdhive's live window with the steps column; the steps and any question for
 you appear in the chat. There is no tray icon or tray panel; the Dock icon bounces and a
-notification appears instead. ⌘ takes the place of Ctrl in AIT's shortcuts.
+notification appears instead. ⌘ takes the place of Ctrl in Cmdhive's shortcuts.
 
 ### The AI tools
 
-AIT runs each AI's own command-line tool. On first start, the setup wizard installs the ones
+Cmdhive runs each AI's own command-line tool. On first start, the setup wizard installs the ones
 you don't have yet (Claude Code, Codex for ChatGPT, Gemini CLI), and you can switch off any you
-don't want. Codex and Gemini need Node.js; if it's missing, AIT installs it from nodejs.org
+don't want. Codex and Gemini need Node.js; if it's missing, Cmdhive installs it from nodejs.org
 and Windows asks for permission. To install a tool yourself instead:
 
 | AI | Install |
@@ -51,7 +54,7 @@ and Windows asks for permission. To install a tool yourself instead:
 | ChatGPT | `npm install -g @openai/codex` |
 | Gemini | `npm install -g @google/gemini-cli` |
 
-AIT finds them by itself and uses the accounts you are already signed in with.
+Cmdhive finds them by itself and uses the accounts you are already signed in with.
 
 **AI rules.** The rules every AI follows first are edited in the app (menu → AI rules), with ten
 presets to start from.
@@ -73,7 +76,7 @@ presets to start from.
   account has used and when it resets, how full the context is, and how long the last reply took.
 - **One conversation across AIs.** When every account of one AI runs out, the conversation
   continues on the next AI (Claude → ChatGPT → Gemini), which is handed the history so far.
-  Or have AIT ask first, or wait for the reset.
+  Or have Cmdhive ask first, or wait for the reset.
 - **Shared memory.** One memory folder every AI reads and adds to, so what one learns the
   others know.
 - **Device connector.** Share that memory between your own computers, so the AI on your
@@ -83,10 +86,10 @@ presets to start from.
   place inside it, so nothing is ever overwritten and the AIs always know which device a
   memory came from. No account, no server, nothing to pay for. See
   [Connecting your devices](#connecting-your-devices).
-- **Tray.** AIT lives in the tray too: click the icon for a small panel with what the AI is doing,
-  its latest reply, usage, and a box to type to it. Hide AIT to the tray and the AI keeps working;
+- **Tray.** Cmdhive lives in the tray too: click the icon for a small panel with what the AI is doing,
+  its latest reply, usage, and a box to type to it. Hide Cmdhive to the tray and the AI keeps working;
   a Windows notification tells you when it finishes or needs you.
-- **Tabs come back.** The AI chats open when AIT closed reopen at the next start (Settings to switch off).
+- **Tabs come back.** The AI chats open when Cmdhive closed reopen at the next start (Settings to switch off).
 - **History.** Search and reopen any past conversation (Ctrl+Shift+H); find text inside a chat with Ctrl+F, or save one as Markdown with `/export`.
 - **MCP servers.** The plug button next to the model shows the AI's own MCP servers and their
   status, with a switch for each; what you switch off stays off in every chat of that AI.
@@ -98,12 +101,12 @@ presets to start from.
 
 ## Connecting your devices
 
-Every computer running AIT can share one memory. There is no server and no sign-up: the
+Every computer running Cmdhive can share one memory. There is no server and no sign-up: the
 devices talk through a folder you already sync between them.
 
 1. On the first computer: **Device connector** (top right) → **Connect a device**. Pick one of
-   the synced drives AIT found, or choose any folder.
-2. On the second: the same, and pick **the same folder**. AIT creates an `AIT Memory` folder
+   the synced drives Cmdhive found, or choose any folder.
+2. On the second: the same, and pick **the same folder**. Cmdhive creates a `Cmdhive Memory` folder
    inside it.
 
 Within half a minute each device shows up in the other's dropdown, with what it is called,
@@ -116,10 +119,10 @@ devices remember is mirrored in beside them, one folder per device:
 memory/
   MEMORY.md             this device's memories, exactly as before
   stud-building.md
-  from-macbook/         the MacBook's, read-only (AIT keeps it in step)
+  from-macbook/         the MacBook's, read-only (Cmdhive keeps it in step)
     MEMORY.md
     vacation-notes.md
-  DEVICES.md            which device is which (AIT writes this)
+  DEVICES.md            which device is which (Cmdhive writes this)
 ```
 
 The AIs are told about this, so they read every device's memories but only ever write their
@@ -147,9 +150,9 @@ installed tools or hardware differ.
 
 ## Privacy and safety
 
-- AIT has no account, server or telemetry. Your chats stay where the AI tools already keep them.
+- Cmdhive has no account, server or telemetry. Your chats stay where the AI tools already keep them.
 - Connected devices share memory through a folder of your own. Nothing passes through
-  anything the author runs, and AIT itself uploads nothing.
+  anything the author runs, and Cmdhive itself uploads nothing.
 - It never opens login or token files. It only checks whether they exist, to tell whether
   you're signed in.
 - Its only network access of its own is checking this repository for updates. You can turn
@@ -159,12 +162,12 @@ installed tools or hardware differ.
 - The AI gets the folder access you choose in Settings, and approval cards still apply.
 
 Each AI provider has its own terms of service. Make sure your use, including use of more
-than one account, follows them. AIT isn't affiliated with Anthropic, OpenAI or Google.
+than one account, follows them. Cmdhive isn't affiliated with Anthropic, OpenAI or Google.
 
 ## How account switching works
 
-Each AI tool keeps a log of every conversation on disk. AIT watches that log; when the tool
-records a usage-limit or signed-out error, AIT copies the conversation into the next
+Each AI tool keeps a log of every conversation on disk. Cmdhive watches that log; when the tool
+records a usage-limit or signed-out error, Cmdhive copies the conversation into the next
 account's folder and resumes it there with "continue". Each account keeps its own folder,
 so nothing about a login is shared or moved.
 
@@ -174,13 +177,13 @@ Needs Go 1.27+, [Wails v2](https://wails.io) and, for the installer, [NSIS](http
 
 ```sh
 go test ./...                    # unit tests, including a fake-CLI account switch
-wails build -s -trimpath         # build/bin/AIT.exe
-wails build -s -trimpath -nsis   # also build/bin/AIT-amd64-installer.exe
-wails build -s -trimpath -platform darwin/universal   # on a Mac: build/bin/AIT.app
+wails build -s -trimpath         # build/bin/Cmdhive.exe
+wails build -s -trimpath -nsis   # also build/bin/Cmdhive-amd64-installer.exe
+wails build -s -trimpath -platform darwin/universal   # on a Mac: build/bin/Cmdhive.app
 ```
 
 The Mac app is built by GitHub Actions ([`mac.yml`](.github/workflows/mac.yml)) whenever a release
-is published, and attached to it as `AIT-mac.zip`.
+is published, and attached to it as `Cmdhive-mac.zip`.
 
 Releases are published with `scripts/release.sh <version> "<notes>"`.
 

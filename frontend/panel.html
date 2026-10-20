@@ -18,10 +18,10 @@ html, body { margin: 0; background: var(--bg); overflow: hidden; }
 </style>
 </head>
 <body class="ready">
-<!-- The tray panel. AIT (tray.go) puts its stylesheets above, and the main
+<!-- The tray panel. Cmdhive (tray.go) puts its stylesheets above, and the main
      window sends its status and theme with update(). -->
-<section id="mini" aria-label="AIT status">
-  <div class="mi mn-h"><span class="icon mn-icon"></span><span class="label mn-ai">AIT</span><span class="chip mn-acct"></span></div>
+<section id="mini" aria-label="Cmdhive status">
+  <div class="mi mn-h"><span class="icon mn-icon"></span><span class="label mn-ai">Cmdhive</span><span class="chip mn-acct"></span></div>
   <div class="mn-status"><div class="mn-state"><span class="verb">Starting…</span><span class="meta"></span></div><progress class="mn-bar"></progress></div>
   <div class="mi mn-step" hidden><span class="icon"><span class="tool-dot"></span></span><span class="label"><b class="tool-l"></b> <span class="tool-d"></span></span></div>
   <div class="mn-reply" hidden></div>
@@ -31,11 +31,11 @@ html, body { margin: 0; background: var(--bg); overflow: hidden; }
   <div class="mn-meters"></div>
   <div class="mn-act">
     <div class="sep"></div>
-    <button class="mi" data-a="open"><span class="icon"><span class="mdl">&#xE8A7;</span></span><span class="label">Open AIT</span></button>
+    <button class="mi" data-a="open"><span class="icon"><span class="mdl">&#xE8A7;</span></span><span class="label">Open Cmdhive</span></button>
     <button class="mi" data-a="hide"><span class="icon"><span class="mdl">&#xE921;</span></span><span class="label">Hide to tray</span></button>
     <button class="mi" data-a="settings"><span class="icon"><span class="mdl">&#xE713;</span></span><span class="label">Settings</span></button>
     <div class="sep"></div>
-    <button class="mi" data-a="quit"><span class="icon"><span class="mdl">&#xE7E8;</span></span><span class="label">Quit AIT</span></button>
+    <button class="mi" data-a="quit"><span class="icon"><span class="mdl">&#xE7E8;</span></span><span class="label">Quit Cmdhive</span></button>
   </div>
 </section>
 <script>
@@ -56,7 +56,7 @@ function update(next) {
   for (const [k, v] of Object.entries(s.vars || {})) root.style.setProperty(k, v);
   if (s.theme) root.dataset.theme = s.theme; else delete root.dataset.theme;
   $(".mn-icon").innerHTML = s.icon || "";
-  $(".mn-ai").textContent = s.ai || "AIT";
+  $(".mn-ai").textContent = s.ai || "Cmdhive";
   $(".mn-acct").textContent = s.acct || "";
   $(".mn-state .verb").textContent = s.state || "";
   const bar = $(".mn-bar");
@@ -84,7 +84,7 @@ function update(next) {
   }
   const ta = $(".mn-input textarea");
   ta.disabled = !s.canSend;
-  ta.placeholder = s.canSend ? "Message " + (s.ai || "the AI") : "Open an AI chat in AIT to send messages";
+  ta.placeholder = s.canSend ? "Message " + (s.ai || "the AI") : "Open an AI chat in Cmdhive to send messages";
   const rows = s.rows || [];
   const html = (rows.length ? '<div class="sep"></div>' : "") + rows.map((r) =>
     `<div class="mi mn-m"><span class="label">${esc(r.l)}<span class="sub">${esc(r.note)}</span></span>${meter(r.f)}<span class="chip">${Math.round(r.f * 100)}%</span></div>`).join("");

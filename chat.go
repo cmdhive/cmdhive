@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-// Native chat. Instead of showing an agent's own text UI in a terminal, AIT
+// Native chat. Instead of showing an agent's own text UI in a terminal, Cmdhive
 // runs it in its machine-readable streaming mode and draws the conversation
 // itself. A provider opts in by implementing ChatProvider; one that doesn't
 // keeps the terminal view, so every agent works either way.
@@ -40,7 +40,7 @@ type Ev map[string]any
 
 type ChatProvider interface {
 	// ChatArgs is the command line (after the binary) for streaming mode.
-	// perm is AIT's permission setting: "ask" | "edits" | "never".
+	// perm is Cmdhive's permission setting: "ask" | "edits" | "never".
 	ChatArgs(l Launch, perm string) []string
 	// ChatStart is what to send as soon as the process is up (a protocol
 	// handshake, say). Most agents need nothing: return nil.
@@ -298,7 +298,7 @@ func (a *App) ChatSend(id int, text string, files []string) error {
 	return a.chatSend(id, text, files)
 }
 
-// chatSend sends a message to the tab's AI; AIT's own notes to it use this
+// chatSend sends a message to the tab's AI; Cmdhive's own notes to it use this
 // directly, so they do not count as a new request from the user.
 func (a *App) chatSend(id int, text string, files []string) error {
 	t := a.tab(id)
@@ -473,7 +473,7 @@ func summarize(evs []Ev) []Ev {
 				break
 			}
 		}
-		out = append(out, Ev{"k": "note", "text": fmt.Sprintf("%d earlier items hidden to keep AIT fast; the AI still has them", cut)})
+		out = append(out, Ev{"k": "note", "text": fmt.Sprintf("%d earlier items hidden to keep Cmdhive fast; the AI still has them", cut)})
 		rest = rest[cut:]
 	}
 	return append(out, rest...)

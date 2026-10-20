@@ -18,7 +18,7 @@ import (
 
 // On a Mac the AIs' browser is the Mac's own Chrome (or Edge, Brave, Chromium),
 // started with a private profile and a debugging port that Playwright drives.
-// It is a separate app, not AIT's live-stream window with the steps column:
+// It is a separate app, not Cmdhive's live-stream window with the steps column:
 // the steps and the questions for the user appear in the chat instead.
 
 type browserView struct {
@@ -64,7 +64,7 @@ func (a *App) browserEnsureView(l *browserLog) error {
 	l.view = nil
 	exe := chromeApp()
 	if exe == "" {
-		return errors.New("AIT's browser needs Google Chrome (or Edge, Brave, Chromium) on this Mac")
+		return errors.New("Cmdhive's browser needs Google Chrome (or Edge, Brave, Chromium) on this Mac")
 	}
 	dir, temp := filepath.Join(a.store.browserDir(), "profile"), false
 	if !a.store.Config().BrowserKeep || a.profileBusy() {
@@ -197,7 +197,7 @@ func freePort() (int, error) {
 
 // closeBrowser removes a chat's browser (its window and, when private, its data).
 func (a *App) closeBrowser(key string) {
-	a.browserNote("browser %s removed (its chat was closed, restarted or AIT is quitting)", key[:min(8, len(key))])
+	a.browserNote("browser %s removed (its chat was closed, restarted or Cmdhive is quitting)", key[:min(8, len(key))])
 	a.browser.mu.Lock()
 	l := a.browser.logs[key]
 	delete(a.browser.logs, key)
@@ -217,7 +217,7 @@ func (a *App) closeBrowser(key string) {
 	}
 }
 
-// closeBrowsers is for when AIT quits.
+// closeBrowsers is for when Cmdhive quits.
 func (a *App) closeBrowsers() {
 	a.browser.mu.Lock()
 	keys := make([]string, 0, len(a.browser.logs))
@@ -230,7 +230,7 @@ func (a *App) closeBrowsers() {
 	}
 }
 
-// There is no column to update, and the window is not AIT's to restore.
+// There is no column to update, and the window is not Cmdhive's to restore.
 func (a *App) browserPush(l *browserLog)     {}
 func restoreBrowserView(v *browserView) bool { return false }
 

@@ -12,15 +12,17 @@ import (
 	"syscall"
 )
 
+// Cmdhive was called AIT, and copies from then look for AIT-mac.zip holding
+// AIT.app: every release also publishes that (.github/workflows/mac.yml).
 const (
-	installerAsset = "AIT-mac.zip"
-	checksumAsset  = "AIT-mac.zip.sha256"
+	installerAsset = "Cmdhive-mac.zip"
+	checksumAsset  = "Cmdhive-mac.zip.sha256"
 )
 
-func updateFile(version string) string { return "AIT-mac-" + version + ".zip" }
+func updateFile(version string) string { return "Cmdhive-mac-" + version + ".zip" }
 
-// runUpdate replaces the AIT.app that is running with the one in a verified
-// zip. A helper waits for this AIT to quit, swaps the bundle, and (with
+// runUpdate replaces the app bundle that is running with the one in a verified
+// zip. A helper waits for this Cmdhive to quit, swaps the bundle, and (with
 // relaunch) opens the new one.
 func runUpdate(zip string, relaunch bool) error {
 	exe, err := os.Executable()
@@ -29,11 +31,11 @@ func runUpdate(zip string, relaunch bool) error {
 	}
 	app, _, ok := strings.Cut(exe, ".app/Contents/")
 	if !ok {
-		return errors.New("AIT is not running from an app bundle, so it cannot update itself")
+		return errors.New("Cmdhive is not running from an app bundle, so it cannot update itself")
 	}
 	app += ".app"
 	if f, err := os.CreateTemp(filepath.Dir(app), ".ait-write-test"); err != nil {
-		return fmt.Errorf("AIT cannot write to %s: %w", filepath.Dir(app), err)
+		return fmt.Errorf("Cmdhive cannot write to %s: %w", filepath.Dir(app), err)
 	} else {
 		f.Close()
 		os.Remove(f.Name())
@@ -45,9 +47,14 @@ func runUpdate(zip string, relaunch bool) error {
 	if out, err := exec.Command("ditto", "-x", "-k", zip, stage).CombinedOutput(); err != nil {
 		return fmt.Errorf("could not unpack the update: %s", lastLines(strings.TrimSpace(string(out)), 2))
 	}
-	next := filepath.Join(stage, "AIT.app")
-	if !fileExists(filepath.Join(next, "Contents", "MacOS")) {
-		return errors.New("the update does not contain AIT.app")
+	// The bundle keeps its place and file name (an old install stays AIT.app),
+	// whatever the one in the zip is called.
+	next := ""
+	if apps, _ := filepath.Glob(filepath.Join(stage, "*.app")); len(apps) == 1 {
+		next = apps[0]
+	}
+	if next == "" || !fileExists(filepath.Join(next, "Contents", "MacOS")) {
+		return errors.New("the update does not contain the app")
 	}
 	script := `while kill -0 "$1" 2>/dev/null; do sleep 0.3; done
 rm -rf "$2" && ditto "$3" "$2" && xattr -cr "$2"

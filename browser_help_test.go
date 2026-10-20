@@ -113,7 +113,7 @@ func TestBrowserAskUser(t *testing.T) {
 	}
 }
 
-// Codex asks before an MCP tool runs, with an elicitation request that AIT
+// Codex asks before an MCP tool runs, with an elicitation request that Cmdhive
 // used to ignore, which left the chat waiting forever.
 func TestCodexMcpApproval(t *testing.T) {
 	st := &ChatState{Asks: map[string]json.RawMessage{}, Data: map[string]any{}, Send: func([]byte) {}}

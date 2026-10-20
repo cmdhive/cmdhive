@@ -10,7 +10,7 @@ type RulesPreset struct {
 }
 
 var rulesPresets = []RulesPreset{
-	{"AIT default", "Short answers, finished work, careful with usage.", defaultRules},
+	{"Cmdhive default", "Short answers, finished work, careful with usage.", defaultRules},
 	{"Terse", "As few words as possible.", `# Rules
 
 - Answer in as few words as possible. No preamble, no summary, no pleasantries.

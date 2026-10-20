@@ -11,7 +11,7 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// Telling the user the AI is done (or needs them) while AIT is in the
+// Telling the user the AI is done (or needs them) while Cmdhive is in the
 // background: a Windows notification from the tray icon, and the taskbar
 // button flashes when the window is open behind others.
 
@@ -60,7 +60,7 @@ func ownWindow(class string) uintptr {
 	}
 }
 
-// inFront reports whether one of AIT's windows (the app or the tray panel)
+// inFront reports whether one of Cmdhive's windows (the app or the tray panel)
 // is the one the user is looking at.
 func inFront() bool {
 	fg, _, _ := procGetForegroundWnd.Call()
@@ -69,7 +69,7 @@ func inFront() bool {
 	return int(pid) == os.Getpid()
 }
 
-// notifyBackground shows a notification unless AIT is in front or the user
+// notifyBackground shows a notification unless Cmdhive is in front or the user
 // turned notifications off.
 func (a *App) notifyBackground(title, text string) {
 	if !a.store.Config().notify() || inFront() {
@@ -90,7 +90,7 @@ func (a *App) notifyBackground(title, text string) {
 	showNotification(title, text)
 }
 
-// showNotification shows a Windows notification from AIT's tray icon.
+// showNotification shows a Windows notification from Cmdhive's tray icon.
 func showNotification(title, text string) bool {
 	tray := ownWindow("SystrayClass")
 	if tray == 0 {
@@ -135,13 +135,13 @@ func (a *App) notifyTab(t *Tab, done, failed, text, errText string) {
 		text = cutText(text, 180) + "…"
 	}
 	if text == "" {
-		text = "Open AIT to see the result."
+		text = "Open Cmdhive to see the result."
 	}
 	a.notifiedTab.Store(int64(t.id))
 	a.notifyBackground(title, text)
 }
 
-// openOnNotificationClick makes a click on AIT's notification open AIT. The
+// openOnNotificationClick makes a click on Cmdhive's notification open Cmdhive. The
 // tray library ignores that click, so its window's messages pass through
 // here first.
 func (a *App) openOnNotificationClick() {

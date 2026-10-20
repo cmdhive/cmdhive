@@ -70,7 +70,7 @@ func StartPTY(argv []string, dir string, env []string, cols, rows int, killTree 
 
 	si := &windows.StartupInfoEx{ProcThreadAttributeList: attrs.List()}
 	si.Cb = uint32(unsafe.Sizeof(*si))
-	// Without this a child inherits AIT's own std handles when AIT has
+	// Without this a child inherits Cmdhive's own std handles when Cmdhive has
 	// any (started from a terminal, or under `go test`) and writes there
 	// instead of to the pseudo console. Null handles make it use the console.
 	si.Flags |= windows.STARTF_USESTDHANDLES

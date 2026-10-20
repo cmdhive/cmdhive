@@ -1,17 +1,17 @@
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
-  "name": "AIT",
-  "outputfilename": "AIT",
+  "name": "Cmdhive",
+  "outputfilename": "Cmdhive",
   "frontend:dir": "frontend",
   "wailsjsdir": "frontend",
   "author": {
-    "name": "AIT"
+    "name": "Cmdhive"
   },
   "info": {
-    "productName": "AIT",
+    "productName": "Cmdhive",
     "productVersion": "1.7.0",
-    "comments": "AI Terminal: one AI agent across all your accounts",
-    "companyName": "AIT",
-    "copyright": "\u00a9 2026 AIT"
+    "comments": "Cmdhive: every AI in one terminal, across all your accounts and devices",
+    "companyName": "Cmdhive",
+    "copyright": "\u00a9 2026 Cmdhive"
   }
 }

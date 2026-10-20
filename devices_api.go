@@ -11,7 +11,7 @@ import (
 
 // What the device dropdown calls, and finding the folder to share through.
 
-// CloudFolder is a folder AIT found that is already synced between this
+// CloudFolder is a folder Cmdhive found that is already synced between this
 // user's computers, offered as a one-click choice when connecting.
 type CloudFolder struct {
 	Name string `json:"name"` // "iCloud Drive", "OneDrive", …
@@ -81,7 +81,7 @@ func cloudServiceName(base string) string {
 	return name
 }
 
-// CloudFolders offers the synced folders AIT found on this computer.
+// CloudFolders offers the synced folders Cmdhive found on this computer.
 func (a *App) CloudFolders() []CloudFolder { return cloudCandidates() }
 
 // Devices is the dropdown's state: this device first, then the others.
@@ -126,7 +126,7 @@ func (a *App) ConnectDevices(path string) (DevicesInfo, error) {
 		return a.Devices(), err
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return a.Devices(), fmt.Errorf("AIT can't write to that folder: %w", err)
+		return a.Devices(), fmt.Errorf("Cmdhive can't write to that folder: %w", err)
 	}
 	c := a.store.Config()
 	c.SyncDir = dir
@@ -140,8 +140,8 @@ func (a *App) ConnectDevices(path string) (DevicesInfo, error) {
 	return a.Devices(), nil
 }
 
-// sharedFolderFor is the folder AIT will keep the shared memory in: the one
-// the user picked, with AIT's own folder inside it unless they picked that
+// sharedFolderFor is the folder Cmdhive will keep the shared memory in: the one
+// the user picked, with Cmdhive's own folder inside it unless they picked that
 // folder itself (choosing the same one again on a second device).
 func sharedFolderFor(picked, memory string) (string, error) {
 	picked = filepath.Clean(picked)
@@ -149,7 +149,14 @@ func sharedFolderFor(picked, memory string) (string, error) {
 		return "", errors.New("that folder does not exist")
 	}
 	dir := picked
-	if !strings.EqualFold(filepath.Base(picked), syncFolder) {
+	switch base := filepath.Base(picked); {
+	case strings.EqualFold(base, syncFolder), strings.EqualFold(base, legacyFolder):
+		// The shared folder itself, picked on a second device.
+	case fileExists(filepath.Join(picked, legacyFolder)) && !fileExists(filepath.Join(picked, syncFolder)):
+		// A device connected before the rename shares through the old name;
+		// keep to it, or the two would never meet.
+		dir = filepath.Join(picked, legacyFolder)
+	default:
 		dir = filepath.Join(picked, syncFolder)
 	}
 	// The shared folder holds copies of the memory folder, so one inside the
