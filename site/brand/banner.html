@@ -1,0 +1,27 @@
+<!doctype html>
+<!-- The README banner (docs/banner.png): node scripts/render.cjs site/brand/banner.html docs/banner.png 1280 360 -->
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../brand.css">
+<style>
+  html, body { margin: 0; width: 1280px; height: 360px; overflow: hidden; background: var(--bg); }
+  .stage { position: relative; width: 100%; height: 100%; display: flex; align-items: center; gap: 56px; padding: 0 0 0 120px; box-sizing: border-box; }
+  .comb { position: absolute; inset: 0; mask-image: linear-gradient(90deg, transparent 30%, #000 85%); -webkit-mask-image: linear-gradient(90deg, transparent 30%, #000 85%); }
+  .glow { position: absolute; left: 40px; top: -60px; width: 480px; height: 480px; background: radial-gradient(closest-side, rgba(217,119,87,.20), transparent); }
+  img { position: relative; width: 196px; height: 196px; }
+  .copy { position: relative; }
+  .wordmark { font-size: 112px; color: var(--text); }
+  .tag { font: 500 30px/1.2 var(--sans); color: var(--soft); margin-top: 18px; letter-spacing: -.01em; }
+  .sub { font: 400 19px/1.2 var(--mono); color: var(--muted); margin-top: 14px; }
+</style></head>
+<body>
+  <div class="stage">
+    <div class="comb honeycomb"></div>
+    <div class="glow"></div>
+    <img src="../logo.svg" alt="">
+    <div class="copy">
+      <div class="wordmark">Cmd<span class="hive">hive</span></div>
+      <div class="tag">Every AI in one terminal</div>
+      <div class="sub">Claude · ChatGPT · Gemini — all your accounts, all your devices</div>
+    </div>
+  </div>
+</body></html>

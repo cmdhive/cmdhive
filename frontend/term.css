@@ -307,3 +307,6 @@ body:not(.desk) .mp-fam, body:not(.desk) .mp-def { border-radius: 3px; }
 body:not(.desk) .mp-levels, body:not(.desk) .mp-lv { border-radius: 3px; } body:not(.desk) .mp-lv { font-family: var(--mono); }
 .askcard.cross { border-color: color-mix(in srgb, var(--accent) 45%, var(--hair)); background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 8%, var(--bg)), var(--bg)); }
 .askcard.cross .ak-glyph svg { width: 20px; height: 20px; }
+
+/* The block-letter wordmark: CMD in the text colour, HIVE keeps the sweep. */
+.w-ascii .a-cmd, .su-ascii .a-cmd { color: var(--text); -webkit-text-fill-color: var(--text); }

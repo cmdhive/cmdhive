@@ -155,9 +155,9 @@ function showWelcome(tab) {
   w.className = "welcome";
   w.innerHTML = `
     <div class="w-term">
-      <pre class="w-ascii">${AIT_ASCII}</pre>
+      <pre class="w-ascii">${LOGO_ASCII}</pre>
       <div class="w-boot">
-        <div><span class="wb-k">ait</span><span class="wb-v">${esc(APP_VERSION)} · ${esc(name)}</span></div>
+        <div><span class="wb-k">cmdhive</span><span class="wb-v">${esc(APP_VERSION)} · ${esc(name)}</span></div>
         <div><span class="wb-k">account</span><span class="wb-v wb-acct">…</span></div>
         <div><span class="wb-k">model</span><span class="wb-v wb-model">starting…</span></div>
         <div><span class="wb-k">folder</span><span class="wb-v wb-folder">…</span></div>

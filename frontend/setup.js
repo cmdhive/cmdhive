@@ -3,14 +3,22 @@
 // First-run setup. Shown once, before the first tab, to a new user: nothing
 // about anyone else is in Cmdhive; everything here is the user's own answer.
 
-const AIT_ASCII = [
-  " █████╗ ██╗████████╗",
-  "██╔══██╗██║╚══██╔══╝",
-  "███████║██║   ██║   ",
-  "██╔══██║██║   ██║   ",
-  "██║  ██║██║   ██║   ",
-  "╚═╝  ╚═╝╚═╝   ╚═╝   ",
-].join("\n");
+// The wordmark in block letters, as on the welcome screen: CMD in the text
+// colour, then the HIVE in the accent (term.css). Built from one glyph per
+// letter, so the columns always line up.
+const LOGO_ASCII = (() => {
+  const G = {
+    C: [" ██████╗", "██╔════╝", "██║     ", "██║     ", "╚██████╗", " ╚═════╝"],
+    M: ["███╗   ███╗", "████╗ ████║", "██╔████╔██║", "██║╚██╔╝██║", "██║ ╚═╝ ██║", "╚═╝     ╚═╝"],
+    D: ["██████╗ ", "██╔══██╗", "██║  ██║", "██║  ██║", "██████╔╝", "╚═════╝ "],
+    H: ["██╗  ██╗", "██║  ██║", "███████║", "██╔══██║", "██║  ██║", "╚═╝  ╚═╝"],
+    I: ["██╗", "██║", "██║", "██║", "██║", "╚═╝"],
+    V: ["██╗   ██╗", "██║   ██║", "██║   ██║", "╚██╗ ██╔╝", " ╚████╔╝ ", "  ╚═══╝  "],
+    E: ["███████╗", "██╔════╝", "█████╗  ", "██╔══╝  ", "███████╗", "╚══════╝"],
+  };
+  const row = (word, i) => [...word].map((ch) => G[ch][i]).join("");
+  return G.C.map((_, i) => `<span class="a-cmd">${row("CMD", i)}</span>${row("HIVE", i)}`).join("\n");
+})();
 
 function runSetup() {
   return new Promise((done) => {
@@ -36,7 +44,7 @@ function runSetup() {
     };
 
     function intro(box) {
-      box.innerHTML = `<pre class="su-ascii">${AIT_ASCII}</pre><h1>Welcome to Cmdhive</h1><p>A few questions to set things up. You can change all of it later in Settings.</p>${nav("Get started", true)}`;
+      box.innerHTML = `<pre class="su-ascii">${LOGO_ASCII}</pre><h1>Welcome to Cmdhive</h1><p>A few questions to set things up. You can change all of it later in Settings.</p>${nav("Get started", true)}`;
       wire(box);
     }
     function name(box) {

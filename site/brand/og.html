@@ -1,0 +1,24 @@
+<!doctype html>
+<!-- The link card (site/img/og.png): node scripts/render.cjs site/brand/og.html site/img/og.png 1200 630 -->
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../brand.css">
+<style>
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: var(--bg); }
+  .stage { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .comb { position: absolute; inset: 0; mask-image: radial-gradient(ellipse 60% 70% at 50% 45%, #000 15%, transparent 75%); -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 45%, #000 15%, transparent 75%); }
+  .glow { position: absolute; left: 50%; top: 40px; width: 760px; height: 480px; transform: translateX(-50%); background: radial-gradient(closest-side, rgba(217,119,87,.22), transparent); }
+  img { position: relative; width: 150px; height: 150px; }
+  .wordmark { position: relative; font-size: 104px; color: var(--text); margin-top: 26px; }
+  .tag { position: relative; font: 500 34px/1.2 var(--sans); color: var(--soft); margin-top: 20px; letter-spacing: -.015em; }
+  .sub { position: relative; font: 400 21px var(--mono); color: var(--muted); margin-top: 16px; }
+</style></head>
+<body>
+  <div class="stage">
+    <div class="comb honeycomb"></div>
+    <div class="glow"></div>
+    <img src="../logo.svg" alt="">
+    <div class="wordmark">Cmd<span class="hive">hive</span></div>
+    <div class="tag">Every AI in one terminal</div>
+    <div class="sub">Claude · ChatGPT · Gemini — cmdhive.org</div>
+  </div>
+</body></html>
