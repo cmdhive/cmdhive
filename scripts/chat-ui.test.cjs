@@ -584,8 +584,57 @@ const assert = require("node:assert/strict");
     assert.match(await page.locator(".su-next").textContent(), /Start using AIT/);
     await page.click(".su-next");
     await page.evaluate(() => setupDone);
+    // ---- device connector: the dropdown that shares memory between computers.
+    await page.evaluate(() => {
+      window.connected = null; window.forgot = null; window.renamed = null;
+      const two = {
+        connected: true, folder: "~/OneDrive/AIT Memory", memory: "~/.claude/memory", error: "",
+        devices: [
+          { id: "a", name: "Desktop", os: "Windows", this: true, online: true, seen: "this device", memories: 42, folder: "" },
+          { id: "b", name: "Kaya's MacBook", os: "Mac", this: false, online: true, seen: "active now", memories: 18, folder: "from-kayas-macbook" },
+        ],
+      };
+      window.deviceState = { connected: false, folder: "", memory: "~/.claude/memory", error: "", devices: [two.devices[0]] };
+      Object.assign(go.main.App, {
+        Devices: async () => deviceState,
+        CloudFolders: async () => [{ name: "OneDrive", path: "C:/Users/k/OneDrive", show: "~/OneDrive" }],
+        ConnectDevices: async (path) => { connected = path; deviceState = two; return two; },
+        RenameDevice: async (n) => { renamed = n; return deviceState; },
+        ForgetDevice: async (id) => { forgot = id; return deviceState; },
+        DisconnectDevices: async () => deviceState,
+        SyncDevicesNow: async () => deviceState,
+      });
+      return refreshDevices();
+    });
+    assert.equal(await page.locator("#dev").getAttribute("title"), "Device connector — share one memory with your other computers");
+
+    await page.evaluate(() => deviceMenu());
+    assert.match(await page.locator("#menu .mi >> nth=0").textContent(), /Desktop.*Windows.*this device.*42 memories/s, "the dropdown shows this device");
+    assert.match(await page.locator("#menu .mi >> nth=1").textContent(), /Connect a device/, "and offers connecting another");
+    await page.click("#menu .mi >> nth=1");
+    assert.match(await page.locator("#menu .mi >> nth=0").textContent(), /OneDrive.*~\/OneDrive/s, "a synced drive AIT found is one click");
+    await page.click("#menu .mi >> nth=0");
+    assert.equal(await page.evaluate(() => connected), "C:/Users/k/OneDrive", "the chosen folder is what AIT connects");
+    assert.equal(await page.locator("#dev .count").textContent(), "2", "the button counts the devices");
+    assert.ok(await page.locator("#dev.on").count(), "and shows it is connected");
+
+    await page.evaluate(() => deviceMenu());
+    assert.match(await page.locator("#menu .mi >> nth=1").textContent(), /Kaya's MacBook.*Mac.*active now.*18 memories/s, "the other device is listed with its memories");
+    await page.click("#menu .mi >> nth=1"); // the peer row offers to forget it
+    assert.match(await page.locator("#ctitle").textContent(), /Forget Kaya's MacBook/);
+    await page.evaluate(() => settle(true)); // the dialog's buttons are wired in boot()
+    assert.equal(await page.evaluate(() => forgot), "b", "forgetting removes that device only");
+
+    await page.evaluate(() => deviceMenu());
+    await page.click("#menu .mi >> nth=0"); // this device: rename
+    assert.ok(await page.locator("#cinput:visible").count(), "renaming asks for the new name");
+    await page.fill("#cinput", "  Work PC  ");
+    await page.evaluate(() => settle(true));
+    assert.equal(await page.evaluate(() => renamed), "Work PC", "the new name is saved, trimmed");
+    assert.equal(await page.locator("#cinput:visible").count(), 0, "the input goes away again");
+
     assert.deepEqual(errors, []);
-    console.log("Chat UI: focus, selection, controls, handover progress, Escape, model display, tab keys, tray panel, MCP list, rules editor, and tool installs passed.");
+    console.log("Chat UI: focus, selection, controls, handover progress, Escape, model display, tab keys, tray panel, MCP list, rules editor, tool installs, and the device connector passed.");
   } finally {
     await browser.close();
   }

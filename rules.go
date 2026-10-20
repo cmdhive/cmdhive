@@ -66,7 +66,7 @@ func (s *Store) RulesFor() (string, string) {
 	if text != "" {
 		text = rulesPriority + text
 	}
-	text += memoryRules(s.ensureMemory())
+	text += memoryRules(s.ensureMemory(), s.peers())
 	ais := map[string]bool{}
 	for _, a := range s.Config().Accounts {
 		ais[a.provider().ID()] = true

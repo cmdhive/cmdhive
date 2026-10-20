@@ -76,6 +76,13 @@ presets to start from.
   Or have AIT ask first, or wait for the reset.
 - **Shared memory.** One memory folder every AI reads and adds to, so what one learns the
   others know.
+- **Device connector.** Share that memory between your own computers, so the AI on your
+  laptop knows what it worked out on your desktop. The button at the top right connects a
+  PC or Mac through a folder they both already reach — iCloud Drive, OneDrive, Dropbox,
+  Syncthing, a network share, even a USB stick. Each device keeps its memories in its own
+  place inside it, so nothing is ever overwritten and the AIs always know which device a
+  memory came from. No account, no server, nothing to pay for. See
+  [Connecting your devices](#connecting-your-devices).
 - **Tray.** AIT lives in the tray too: click the icon for a small panel with what the AI is doing,
   its latest reply, usage, and a box to type to it. Hide AIT to the tray and the AI keeps working;
   a Windows notification tells you when it finishes or needs you.
@@ -88,6 +95,44 @@ presets to start from.
 - **Also a terminal.** PowerShell and Command Prompt tabs, Windows Terminal-style. Ctrl+1–8 jump
   to a tab, Ctrl+9 to the last.
 - Attach files by pasting, dragging them in, or with the paperclip. Zoom with Ctrl+mouse wheel.
+
+## Connecting your devices
+
+Every computer running AIT can share one memory. There is no server and no sign-up: the
+devices talk through a folder you already sync between them.
+
+1. On the first computer: **Device connector** (top right) → **Connect a device**. Pick one of
+   the synced drives AIT found, or choose any folder.
+2. On the second: the same, and pick **the same folder**. AIT creates an `AIT Memory` folder
+   inside it.
+
+Within half a minute each device shows up in the other's dropdown, with what it is called,
+when it was last used and how many memories it shares.
+
+Your own memories stay where they are, at the top level of your memory folder. What the other
+devices remember is mirrored in beside them, one folder per device:
+
+```
+memory/
+  MEMORY.md             this device's memories, exactly as before
+  stud-building.md
+  from-macbook/         the MacBook's, read-only (AIT keeps it in step)
+    MEMORY.md
+    vacation-notes.md
+  DEVICES.md            which device is which (AIT writes this)
+```
+
+The AIs are told about this, so they read every device's memories but only ever write their
+own, and they can say which device something was learned on — which matters when paths,
+installed tools or hardware differ.
+
+- A device only ever writes its own folder in the shared area, so two computers can never
+  edit the same file and your drive can't leave conflict copies behind.
+- Offline is fine. On a plane, or with the drive unmounted, every memory is still there and
+  the AIs keep using it; changes go out when you are back.
+- **Disconnect this device** stops sharing and removes the other devices' memories from it.
+  Its own are untouched. **Forget** does that for one device only.
+- With one device connected, nothing changes at all: the memory folder stays exactly as it is.
 
 ## Screenshots
 
@@ -103,6 +148,8 @@ presets to start from.
 ## Privacy and safety
 
 - AIT has no account, server or telemetry. Your chats stay where the AI tools already keep them.
+- Connected devices share memory through a folder of your own. Nothing passes through
+  anything the author runs, and AIT itself uploads nothing.
 - It never opens login or token files. It only checks whether they exist, to tell whether
   you're signed in.
 - Its only network access of its own is checking this repository for updates. You can turn

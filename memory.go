@@ -49,8 +49,25 @@ func (s *Store) ensureMemory() string {
 }
 
 // memoryRules is the part of every agent's instructions that points it at
-// the shared memory. Short: it is re-sent with every request.
-func memoryRules(dir string) string {
+// the shared memory, plus — when the user has other devices connected — at
+// what those remember. Short: it is re-sent with every request.
+func memoryRules(dir string, peers []Device) string {
+	return memoryRulesBase(dir) + deviceRules(peers)
+}
+
+// deviceRules is added only while another device is connected; with one
+// device there is nothing to say and nothing changes.
+func deviceRules(peers []Device) string {
+	if len(peers) == 0 {
+		return ""
+	}
+	return "\n- The user's other devices share this memory too: theirs are in `" + mirrorPrefix +
+		"<device>/` folders, each with its own " + memoryIndex + ", and `" + devicesIndex +
+		"` lists which device is which. Read them like your own, but save new memories at the top level (this device) — AIT overwrites the `" + mirrorPrefix + "…` folders.\n" +
+		"- Name the device when it matters: paths, installed tools and hardware differ between them."
+}
+
+func memoryRulesBase(dir string) string {
 	return "\n\n## Shared memory\n" +
 		"- All AIs in AIT share one memory folder: " + dir + "\n" +
 		"- Read " + memoryIndex + " there before starting work; open the files it links only when relevant.\n" +

@@ -691,7 +691,7 @@ func TestShareMemoryLinksOnlyNewFolders(t *testing.T) {
 	if b, _ := os.ReadFile(filepath.Join(own, "mine.md")); string(b) != "its own" || fileExists(filepath.Join(own, "fact.md")) {
 		t.Fatal("an existing memory folder was replaced")
 	}
-	if text := memoryRules(shared); !strings.Contains(text, shared) || !strings.Contains(text, "MEMORY.md") {
+	if text := memoryRules(shared, nil); !strings.Contains(text, shared) || !strings.Contains(text, "MEMORY.md") {
 		t.Fatal("instructions do not point at the shared memory")
 	}
 }

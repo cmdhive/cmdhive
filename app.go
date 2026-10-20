@@ -93,6 +93,7 @@ type App struct {
 	tabsSave    tabsSaver    // debounced saving of the open tabs (tabs.go)
 	panel       trayPanel    // the tray icon's status panel (tray.go)
 	browser     browserHub   // the AIs' browser (browser.go)
+	sync        deviceSync   // sharing memory with the user's other devices (devices.go)
 
 	mu      sync.Mutex
 	tabs    map[int]*Tab
@@ -123,6 +124,7 @@ func (a *App) startup(ctx context.Context) {
 	// The first agent starts now, while the window is still loading.
 	go a.prepareStandby()
 	go a.browserInstall()
+	a.startDeviceSync()
 	go a.browserReap()
 	a.startUpdateChecks()
 	a.startTray()

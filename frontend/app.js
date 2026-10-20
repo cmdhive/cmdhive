@@ -17,7 +17,10 @@ const ICONS = {
 const GLYPH = {
   plus: '<span class="mdl">&#xE710;</span>', gear: '<span class="mdl">&#xE713;</span>',
   history: '<span class="mdl">&#xE81C;</span>', attach: '<span class="mdl">&#xE723;</span>',
-  rules: '<span class="mdl">&#xE70F;</span>',
+  rules: '<span class="mdl">&#xE70F;</span>', device: '<span class="mdl">&#xE770;</span>',
+  folder: '<span class="mdl">&#xE8B7;</span>', cloud: '<span class="mdl">&#xE753;</span>',
+  refresh: '<span class="mdl">&#xE72C;</span>', open: '<span class="mdl">&#xE8A7;</span>',
+  x: '<span class="mdl">&#xE8BB;</span>',
 };
 const icon = (id) => ICONS[id] || ICONS.agent;
 let APP_VERSION = "";
@@ -689,6 +692,129 @@ function addAccountMenu(tab) {
   showMenu($("#acct"), items, true);
 }
 
+// ---- device connector ------------------------------------------------------
+// Every computer running AIT can share one memory. The devices find each
+// other through a folder the user already syncs between them; AIT keeps each
+// device's memories separate inside it, so nothing is ever overwritten.
+
+let devices = { connected: false, devices: [], folder: "", error: "" };
+
+async function refreshDevices() {
+  try { devices = await API().Devices(); } catch { return; }
+  renderDeviceButton();
+}
+
+function renderDeviceButton() {
+  const btn = $("#dev");
+  const n = devices.devices.length, others = n - 1;
+  btn.classList.toggle("on", devices.connected && !devices.error);
+  btn.classList.toggle("warn", !!devices.error);
+  btn.querySelector(".count").textContent = others > 0 ? String(n) : "";
+  btn.title = devices.error ? "Device connector — " + devices.error
+    : !devices.connected ? "Device connector — share one memory with your other computers"
+    : others > 0 ? `Device connector — ${n} devices sharing one memory`
+    : "Device connector — waiting for your other device";
+}
+
+async function deviceMenu() {
+  await refreshDevices();
+  const items = [];
+  if (devices.error) items.push({ header: "⚠ " + devices.error });
+  items.push({ header: devices.connected ? "These devices share one memory" : "This device" });
+  for (const d of devices.devices) {
+    const mem = `${d.memories} ${d.memories === 1 ? "memory" : "memories"}`;
+    items.push({
+      cls: d.this ? "current" : "",
+      html: `<span class="radio"></span><span class="icon">${GLYPH.device}</span><span class="label">${esc(d.name)}`
+        + `<span class="sub">${esc([d.os, d.this ? "this device" : d.seen, mem].join(" · "))}</span></span>`
+        + (!d.this && d.online ? '<span class="chip ready">active</span>' : ""),
+      run: d.this ? renameDevice : () => forgetDevice(d),
+    });
+  }
+  items.push("-");
+  if (!devices.connected) {
+    items.push({
+      html: `<span class="icon">${GLYPH.plus}</span><span class="label">Connect a device…<span class="sub">share one memory between your computers</span></span>`,
+      run: connectMenu,
+    });
+  } else {
+    items.push({
+      html: `<span class="icon">${GLYPH.refresh}</span><span class="label">Sync now</span>`,
+      run: async () => { hideMenu(); devices = await API().SyncDevicesNow(); renderDeviceButton(); toast(devices.error || "Memory synced.", 2500); },
+    }, {
+      html: `<span class="icon">${GLYPH.plus}</span><span class="label">Add another device…<span class="sub">pick this same folder there</span></span>`,
+      run: () => { hideMenu(); toast("On your other computer: Device connector → Connect a device → " + devices.folder, 12000); },
+    }, {
+      html: `<span class="icon">${GLYPH.open}</span><span class="label">Open the shared folder<span class="sub">${esc(devices.folder)}</span></span>`,
+      run: () => API().OpenSharedFolder(),
+    }, {
+      html: `<span class="icon">${GLYPH.rules}</span><span class="label">Rename this device…</span>`,
+      run: renameDevice,
+    }, {
+      cls: "danger",
+      html: `<span class="icon">${GLYPH.x}</span><span class="label">Disconnect this device</span>`,
+      run: disconnectDevices,
+    });
+  }
+  showMenu($("#dev"), items, true);
+}
+
+// Connecting: pick a folder both computers can reach. AIT offers the synced
+// drives it found, so for most people this is one click.
+async function connectMenu() {
+  let folders = [];
+  try { folders = await API().CloudFolders(); } catch {}
+  const items = [{ header: "Share through a folder both computers reach" }];
+  for (const f of folders) {
+    items.push({
+      html: `<span class="icon">${GLYPH.cloud}</span><span class="label">${esc(f.name)}<span class="sub">${esc(f.show)}</span></span>`,
+      run: () => doConnect(f.path),
+    });
+  }
+  items.push({
+    html: `<span class="icon">${GLYPH.folder}</span><span class="label">Choose a folder…<span class="sub">any synced folder, a network share or a USB stick</span></span>`,
+    run: () => doConnect(""),
+  }, { header: "Then pick the same folder on your other computer. Memories stay in your own drive — AIT has no server." });
+  showMenu($("#dev"), items, true);
+}
+
+async function doConnect(path) {
+  hideMenu();
+  try {
+    devices = await API().ConnectDevices(path);
+  } catch (err) { toast(String(err), 7000); return; }
+  renderDeviceButton();
+  if (!devices.connected) return; // the folder picker was cancelled
+  const others = devices.devices.length - 1;
+  toast(others > 0
+    ? `Connected — ${others} other device${others === 1 ? "" : "s"} sharing memory.`
+    : `Ready. Now open AIT on your other computer and pick the same folder:  ${devices.folder}`, 10000);
+}
+
+async function renameDevice() {
+  const me = devices.devices.find((d) => d.this);
+  const name = await askInput("Rename this device", "What your other computers call it.", me ? me.name : "", "Rename");
+  if (name === null) return;
+  devices = await API().RenameDevice(name);
+  renderDeviceButton();
+}
+
+async function forgetDevice(d) {
+  const ok = await ask(`Forget ${d.name}?`,
+    `Its ${d.memories} ${d.memories === 1 ? "memory" : "memories"} are removed from this device. ${d.name} keeps its own, and connecting again brings them back.`, "Forget");
+  if (!ok) return;
+  devices = await API().ForgetDevice(d.id);
+  renderDeviceButton();
+}
+
+async function disconnectDevices() {
+  const ok = await ask("Disconnect this device?",
+    "It stops sharing memory. The other devices' memories are removed from this one; everything this device remembers itself stays.", "Disconnect");
+  if (!ok) return;
+  devices = await API().DisconnectDevices();
+  renderDeviceButton();
+}
+
 // ---- signing an account in ------------------------------------------------------
 // The AI's own sign-in runs in the background and opens the browser; this
 // dialog follows it. A new account the user backs out of is removed again.
@@ -988,6 +1114,7 @@ let answer = null;
 // ask resolves true (yes), false (cancel) or "alt" (the optional third choice).
 function ask(title, body, yes, alt) {
   hideMenu();
+  $("#cinput").hidden = true; // askInput shows it again
   $("#calt").hidden = !alt;
   $("#calt").textContent = alt || "";
   $("#cyes").textContent = yes || (title.startsWith("Close") ? "Close" : "Continue");
@@ -999,6 +1126,22 @@ function ask(title, body, yes, alt) {
   $("#confirm").hidden = false;
   $("#cyes").focus();
   return new Promise((resolve) => { answer = resolve; });
+}
+
+// askInput is ask() with one line to type in; it resolves the text, or null
+// when the user cancels.
+function askInput(title, body, value, yes) {
+  const inp = $("#cinput");
+  const done = ask(title, body, yes); // hides the input, so unhide after it
+  inp.hidden = false;
+  inp.value = value || "";
+  inp.focus();
+  inp.select();
+  return done.then((ok) => {
+    const text = inp.value.trim();
+    inp.hidden = true;
+    return ok ? text : null;
+  });
 }
 
 function settle(ok) {
@@ -1188,6 +1331,10 @@ async function boot() {
   $("#new").addEventListener("click", () => openTab(ui.defaultProfile));
   $("#more").addEventListener("click", (e) => { e.stopPropagation(); $("#menu").hidden ? profileMenu() : hideMenu(); });
   $("#acct").addEventListener("click", (e) => { e.stopPropagation(); $("#menu").hidden ? accountMenu() : hideMenu(); });
+  $("#dev").addEventListener("click", (e) => { e.stopPropagation(); $("#menu").hidden ? deviceMenu() : hideMenu(); });
+  $("#cinput").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); settle(true); } });
+  refreshDevices();
+  RT().EventsOn("devices:changed", refreshDevices);
   $("#history").addEventListener("click", toggleHistory);
   $("#pin").addEventListener("click", togglePin);
   $("#update").addEventListener("click", installUpdate);
@@ -1214,7 +1361,7 @@ async function boot() {
   });
 
   document.addEventListener("mousedown", (e) => {
-    if (!e.target.closest("#menu, #more, #acct")) hideMenu();
+    if (!e.target.closest("#menu, #more, #acct, #dev")) hideMenu();
     if (!e.target.closest("#modelpop, .c-model, .c-mcp")) closeModelPop();
   });
   document.addEventListener("keydown", (e) => {

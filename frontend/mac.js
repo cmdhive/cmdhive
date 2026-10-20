@@ -45,6 +45,9 @@
     E718: P("M9 2l5 5-2 1-2 2 .5 3-1 1-2.5-2.5L3 14"),
     E8C8: P("M5.5 5.5h7v8h-7z") + P("M3.5 10.5v-8h7"),
     E81C: circle(8, 8, 6) + P("M8 4.5V8l2.5 1.5"),
+    E770: P("M1.5 3h9.5v6.5H1.5z") + P("M4.5 12h5") + P("M11.5 6h3v6.5h-3z"),
+    E753: P("M4.5 12h7a2.5 2.5 0 00.2-5A3.5 3.5 0 005 6.6 2.7 2.7 0 004.5 12z"),
+    E8B7: P("M1.5 4.5h4l1.5 2h7.5v7h-13z"),
   };
   const svg = (inner) => `<svg class="msvg" viewBox="0 0 16 16" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
   const glyph = /[-]/;

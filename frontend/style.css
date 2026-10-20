@@ -317,3 +317,20 @@ body:not(.ready) #bar { transform: translateY(-6px); }
 .mac .caption { display: none; }
 .mac .mglyph { display: inline-flex; vertical-align: -0.12em; }
 .mac .mglyph svg { width: 1em; height: 1em; }
+
+/* ---- device connector --------------------------------------------------- */
+#dev { position: relative; }
+#dev.on { color: var(--text); }
+#dev.on::after {
+  content: ""; position: absolute; right: 4px; bottom: 4px;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--ok);
+}
+#dev.warn::after { background: var(--warn); }
+#dev .count { position: absolute; top: 1px; right: 1px; font-size: 9px; line-height: 1; color: var(--muted); }
+.mi.danger .label { color: #e06c5f; }
+#cinput {
+  display: block; width: 100%; box-sizing: border-box; margin: -8px 0 18px;
+  padding: 7px 9px; border-radius: 5px; font-size: 12.5px;
+  background: var(--row); border: 1px solid #3a3a3a; color: var(--text);
+}
+#cinput:focus { border-color: var(--accent); outline: none; }

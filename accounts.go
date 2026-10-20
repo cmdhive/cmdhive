@@ -59,6 +59,10 @@ type Config struct {
 	AIOrder        []string            `json:"aiOrder"`                // order to try other AIs in
 	BrowserKeep    bool                `json:"browserKeep"`            // the AIs' browser keeps its sessions between runs (default: throwaway)
 	BrowserSites   []string            `json:"browserSites,omitempty"` // sites the AIs may always open
+	DeviceID       string              `json:"deviceId,omitempty"`     // this installation's own id (devices.go)
+	DeviceName     string              `json:"deviceName,omitempty"`   // what this device is called; "" = the computer's name
+	SyncDir        string              `json:"syncDir,omitempty"`      // folder the devices share their memory through; "" = not connected
+	ForgotDevices  []string            `json:"forgotDevices,omitempty"`
 }
 
 func (c Config) aiOrder() []string {
