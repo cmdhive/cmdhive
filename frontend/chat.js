@@ -45,6 +45,7 @@ function createChat(tab) {
         <button class="cbtn c-browser" title="Show the AI's browser window" hidden><span class="mdl">&#xE774;</span></button>
         <button class="cbtn c-mcp" title="MCP servers"><span class="mdl">&#xE71B;</span></button>
         <button class="c-model" title="Switch model"><span class="cm-dot"></span><span class="cm-name">Default</span><span class="mdl small">&#xE70D;</span></button>
+        <span class="c-enh-note" aria-live="polite"></span>
         <button class="cbtn c-enhance" title="Enhance prompt: a separate AI rewrites what you typed, with your memory as context"><span class="mdl">&#xE945;</span></button>
         <button class="cbtn c-attach" title="Attach files (Ctrl+Shift+O)"><span class="mdl">&#xE723;</span></button>
         <button class="cbtn c-send" title="Send (Enter)"><span class="mdl">&#xE724;</span></button>
@@ -1476,11 +1477,25 @@ async function enhance(tab) {
   if (btn.classList.contains("working")) return;
   const draft = c.ta.value;
   if (!enhanceable(draft)) { toast("Type a bit more first: the enhancer needs something to work with.", 3500); c.ta.focus(); return; }
+  // Shown at once and for as long as it runs: a bar along the box, the draft
+  // dimmed, a word for it (chat.css). None of it needs animation, which
+  // Windows turns off when "Show animations" is off.
+  const box = c.root.querySelector(".composer"), note = c.root.querySelector(".c-enh-note");
+  clearTimeout(c.enhanceFail);
+  box.classList.remove("enhance-failed");
+  note.classList.remove("failed");
+  box.classList.add("enhancing");
+  note.textContent = "Enhancing…";
+  const began = Date.now();
+  c.enhanceTick = setInterval(() => { note.textContent = "Enhancing… " + Math.round((Date.now() - began) / 1000) + "s"; }, 1000);
+  box.style.setProperty("--enh-w", box.clientWidth - 28 + "px"); // the bar slides across the box
   btn.classList.add("working");
   btn.title = "Enhancing your prompt…";
   c.ta.readOnly = true;
+  const stop = () => { clearInterval(c.enhanceTick); box.classList.remove("enhancing"); note.textContent = ""; };
   try {
     const better = await API().EnhancePrompt(tab.id, draft);
+    stop(); // gone in the same frame the new text arrives
     if (c.ta.value !== draft) return; // changed meanwhile: leave the user's text alone
     if (better && better.trim() !== draft.trim()) {
       c.ta.readOnly = false;
@@ -1495,8 +1510,15 @@ async function enhance(tab) {
       toast("Your prompt was already clear; nothing to change.", 3000);
     }
   } catch (err) {
-    toast(String(err?.message || err).replace(/^Error:\s*/, ""), 5000);
+    stop();
+    // Failed is shown where it was working, for a few seconds, besides the reason.
+    box.classList.add("enhance-failed");
+    note.classList.add("failed");
+    note.textContent = "Enhance failed";
+    c.enhanceFail = setTimeout(() => { box.classList.remove("enhance-failed"); note.classList.remove("failed"); note.textContent = ""; }, 4000);
+    toast(String(err?.message || err).replace(/^Error:\s*/, ""), 6000);
   } finally {
+    if (box.classList.contains("enhancing")) stop();
     c.ta.readOnly = false;
     btn.classList.remove("working");
     btn.title = "Enhance prompt: a separate AI rewrites what you typed, with your memory as context";

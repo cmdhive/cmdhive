@@ -602,6 +602,48 @@ const assert = require("node:assert/strict");
     assert.equal(await page.locator(".composer textarea").inputValue(), "fix the login bug", "Ctrl+Z brings the original back");
     await page.evaluate(() => { const c = tabs.get(1).chat; c.ta.value = ""; c.ta.dispatchEvent(new Event("input")); });
 
+    // While it runs: the bar, the dimmed draft and a ticking label show from the click until the answer.
+    await page.evaluate(() => {
+      window.release = null; window.fail = false;
+      go.main.App.EnhancePrompt = () => new Promise((res, rej) => { release = () => (fail ? rej(new Error("No account has usage left to enhance with right now.")) : res("Fix the expired-token bug in src/auth.ts, then run the auth tests.")); });
+    });
+    const live = () => page.evaluate(() => { const r = tabs.get(1).chat.root; return { on: r.querySelector(".composer").classList.contains("enhancing"), note: r.querySelector(".c-enh-note").textContent, bar: getComputedStyle(r.querySelector(".composer"), "::after").display }; });
+    await page.fill(".composer textarea", "fix the login bug");
+    await page.click(".c-enhance");
+    let st = await live();
+    assert.ok(st.on && /^Enhancing/.test(st.note) && st.bar !== "none", "the indicator is up as soon as Enhance is clicked: " + JSON.stringify(st));
+    await page.waitForTimeout(2300);
+    st = await live();
+    assert.ok(st.on && /Enhancing… [1-9]\d*s/.test(st.note), "and still up, with a counter that is ticking, while it works: " + JSON.stringify(st));
+    assert.equal(await page.evaluate(() => document.querySelector(".composer textarea").readOnly), true, "the draft is locked while it runs");
+    await page.evaluate(() => release());
+    await page.waitForFunction(() => tabs.get(1).chat.ta.value.startsWith("Fix the expired-token"));
+    st = await live();
+    assert.ok(!st.on && st.note === "", "it is gone in the same moment the new text appears: " + JSON.stringify(st));
+    assert.equal(await page.evaluate(() => document.querySelector(".composer textarea").readOnly), false, "and the box is editable again");
+
+    // A failure stops it too, and says so rather than hanging.
+    await page.evaluate(() => { fail = true; const c = tabs.get(1).chat; c.ta.value = "fix the login bug"; c.ta.dispatchEvent(new Event("input")); });
+    await page.click(".c-enhance");
+    assert.ok((await live()).on, "up again for the next run");
+    await page.evaluate(() => release());
+    await page.waitForFunction(() => !tabs.get(1).chat.root.querySelector(".composer").classList.contains("enhancing"));
+    const enhFailed = await page.evaluate(() => { const r = tabs.get(1).chat.root; return { note: r.querySelector(".c-enh-note").textContent, box: r.querySelector(".composer").classList.contains("enhance-failed"), text: tabs.get(1).chat.ta.value }; });
+    assert.deepEqual(enhFailed, { note: "Enhance failed", box: true, text: "fix the login bug" }, "a failure stops the indicator, says so, and leaves the draft alone");
+    await page.waitForFunction(() => tabs.get(1).chat.root.querySelector(".c-enh-note").textContent === "", null, { timeout: 7000 });
+    await page.evaluate(() => { const c = tabs.get(1).chat; c.ta.value = ""; c.ta.dispatchEvent(new Event("input")); });
+
+    // Windows' "Show animations" off reaches the page as reduced motion: still visible, as a solid bar.
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.evaluate(() => { fail = false; const c = tabs.get(1).chat; c.ta.value = "fix the login bug"; c.ta.dispatchEvent(new Event("input")); });
+    await page.click(".c-enhance");
+    const calm = await page.evaluate(() => { const b = getComputedStyle(tabs.get(1).chat.root.querySelector(".composer"), "::after"); return { anim: b.animationName, w: parseFloat(b.width) }; });
+    assert.ok(calm.anim === "none" && calm.w > 100, "with animations off the bar is solid, not missing: " + JSON.stringify(calm));
+    await page.evaluate(() => release());
+    await page.waitForFunction(() => tabs.get(1).chat.ta.value.startsWith("Fix the expired-token"));
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.evaluate(() => { const c = tabs.get(1).chat; c.ta.value = ""; c.ta.dispatchEvent(new Event("input")); });
+
     // ---- device connector: the dropdown that shares memory between computers.
     await page.evaluate(() => {
       window.connected = null; window.forgot = null; window.renamed = null;
