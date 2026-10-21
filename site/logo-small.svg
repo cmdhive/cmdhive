@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#26262d"/><stop offset="1" stop-color="#101013"/>
+    </linearGradient>
+    <linearGradient id="cell" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#e88e6f"/><stop offset="1" stop-color="#d97757"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#d97757" stop-opacity=".40"/>
+      <stop offset="1" stop-color="#d97757" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="46" y="46" width="932" height="932" rx="208" fill="url(#tile)"/>
+  <path d="M932.0 512.0 L722.0 875.7 L302.0 875.7 L92.0 512.0 L302.0 148.3 L722.0 148.3 Z" fill="url(#cell)"/>
+  <path d="M828.0 512.0 L670.0 785.7 L354.0 785.7 L196.0 512.0 L354.0 238.3 L670.0 238.3 Z" fill="#101013"/>
+  <path d="M348 379 L531 512 L348 645" fill="none" stroke="#f4f4f5" stroke-width="76" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="569" y="584" width="164" height="76" rx="29" fill="#f4f4f5"/>
+</svg>

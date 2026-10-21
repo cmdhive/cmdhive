@@ -1,23 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
   <defs>
     <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#25252c"/>
-      <stop offset="1" stop-color="#111114"/>
+      <stop offset="0" stop-color="#26262d"/><stop offset="1" stop-color="#101013"/>
+    </linearGradient>
+    <linearGradient id="cell" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#e88e6f"/><stop offset="1" stop-color="#d97757"/>
     </linearGradient>
     <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#d97757" stop-opacity=".45"/>
+      <stop offset="0" stop-color="#d97757" stop-opacity=".40"/>
       <stop offset="1" stop-color="#d97757" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <!-- the tile -->
-  <rect x="46" y="46" width="932" height="932" rx="200" fill="url(#tile)"/>
-  <rect x="47.5" y="47.5" width="929" height="929" rx="198.5" fill="none" stroke="#ffffff" stroke-opacity=".07" stroke-width="3"/>
-  <!-- the hive: one lit cell with a quieter one beside it -->
-  <circle cx="690" cy="300" r="200" fill="url(#glow)"/>
-  <path d="M690 174 L799.1 237 L799.1 363 L690 426 L580.9 363 L580.9 237 Z" fill="#d97757"/>
-  <path d="M690 250 L733.3 275 L733.3 325 L690 350 L646.7 325 L646.7 275 Z" fill="#7a3b27"/>
-  <path d="M810 390 L912.2 449 L912.2 567 L810 626 L707.8 567 L707.8 449 Z" fill="none" stroke="#d97757" stroke-opacity=".6" stroke-width="18" stroke-linejoin="round"/>
-  <!-- the prompt -->
-  <path d="M238 440 L402 555 L238 670" fill="none" stroke="#f2f2f2" stroke-width="58" stroke-linecap="square" stroke-linejoin="miter"/>
-  <rect x="452" y="690" width="244" height="72" rx="16" fill="#f2f2f2"/>
+  <rect x="46" y="46" width="932" height="932" rx="208" fill="url(#tile)"/>
+  <rect x="47.5" y="47.5" width="929" height="929" rx="206.5" fill="none" stroke="#ffffff" stroke-opacity=".07" stroke-width="3"/>
+  <circle cx="512" cy="512" r="430" fill="url(#glow)"/>
+  <g fill="url(#cell)">
+    <path d="M883.0 378.6 L813.0 499.9 L673.0 499.9 L603.0 378.6 L673.0 257.4 L813.0 257.4 Z"/>
+    <path d="M883.0 645.4 L813.0 766.6 L673.0 766.6 L603.0 645.4 L673.0 524.1 L813.0 524.1 Z"/>
+    <path d="M652.0 778.7 L582.0 900.0 L442.0 900.0 L372.0 778.7 L442.0 657.5 L582.0 657.5 Z"/>
+    <path d="M421.0 645.4 L351.0 766.6 L211.0 766.6 L141.0 645.4 L211.0 524.1 L351.0 524.1 Z"/>
+    <path d="M421.0 378.6 L351.0 499.9 L211.0 499.9 L141.0 378.6 L211.0 257.4 L351.0 257.4 Z"/>
+    <path d="M652.0 245.3 L582.0 366.5 L442.0 366.5 L372.0 245.3 L442.0 124.0 L582.0 124.0 Z"/>
+  </g>
+  <path d="M659.0 512.0 L585.5 639.3 L438.5 639.3 L365.0 512.0 L438.5 384.7 L585.5 384.7 Z" fill="#101013"/>
+  <path d="M647.0 512.0 L579.5 628.9 L444.5 628.9 L377.0 512.0 L444.5 395.1 L579.5 395.1 Z" fill="none" stroke="#d97757" stroke-opacity=".5" stroke-width="6"/>
+  <path d="M439 453 L520 512 L439 571" fill="none" stroke="#f4f4f5" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="537" y="544" width="73" height="34" rx="13" fill="#f4f4f5"/>
 </svg>
