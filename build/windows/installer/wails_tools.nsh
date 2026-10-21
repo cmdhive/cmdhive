@@ -5,19 +5,19 @@
 !include "FileFunc.nsh"
 
 !ifndef INFO_PROJECTNAME
-    !define INFO_PROJECTNAME "AIT"
+    !define INFO_PROJECTNAME "Cmdhive"
 !endif
 !ifndef INFO_COMPANYNAME
-    !define INFO_COMPANYNAME "AIT"
+    !define INFO_COMPANYNAME "Cmdhive"
 !endif
 !ifndef INFO_PRODUCTNAME
-    !define INFO_PRODUCTNAME "AIT"
+    !define INFO_PRODUCTNAME "Cmdhive"
 !endif
 !ifndef INFO_PRODUCTVERSION
-    !define INFO_PRODUCTVERSION "1.7.0"
+    !define INFO_PRODUCTVERSION "1.8.0"
 !endif
 !ifndef INFO_COPYRIGHT
-    !define INFO_COPYRIGHT "© 2026 AIT"
+    !define INFO_COPYRIGHT "© 2026 Cmdhive"
 !endif
 !ifndef PRODUCT_EXECUTABLE
     !define PRODUCT_EXECUTABLE "${INFO_PROJECTNAME}.exe"
