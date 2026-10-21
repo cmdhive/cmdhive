@@ -79,6 +79,9 @@ presets to start from.
   Or have Cmdhive ask first, or wait for the reset.
 - **Shared memory.** One memory folder every AI reads and adds to, so what one learns the
   others know.
+- **Prompt enhancer.** The bolt next to the model rewrites what you typed into a sharper prompt before you
+  send it. It's a separate AI on your own account that sees your shared memory but not the chat, and can't
+  touch anything. Ctrl+Z brings your original back.
 - **Device connector.** Share that memory between your own computers, so the AI on your
   laptop knows what it worked out on your desktop. The button at the top right connects a
   PC or Mac through a folder they both already reach — iCloud Drive, OneDrive, Dropbox,

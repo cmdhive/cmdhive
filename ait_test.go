@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -136,6 +137,15 @@ func fakeClaudeStream() {
 			w(`{"type":"assistant","message":{"id":"r1","content":[{"type":"tool_use","id":"t1","name":"Read","input":{"file_path":"app.go"}}]}}`)
 			w(`{"type":"stream_event","event":{"type":"message_start","message":{"id":"r2","usage":{"input_tokens":5}}}}`)
 			w(`{"type":"assistant","message":{"id":"r2","content":[{"type":"text","text":"FINDINGS: fix the edge case"}]}}`)
+			w(`{"type":"result","subtype":"success","is_error":false,"duration_ms":12,"total_cost_usd":0}`)
+			continue
+		}
+		if strings.Contains(text, "You improve prompts") { // the prompt enhancer: narration first, then the prompt in a fence it was told not to use
+			w(`{"type":"stream_event","event":{"type":"message_start","message":{"id":"e1","usage":{"input_tokens":5}}}}`)
+			w(`{"type":"assistant","message":{"id":"e1","content":[{"type":"text","text":"Let me sharpen that."}]}}`)
+			w(`{"type":"stream_event","event":{"type":"message_start","message":{"id":"e2","usage":{"input_tokens":5}}}}`)
+			reply := fmt.Sprintf("```\nENHANCED with memory=%v\n```", strings.Contains(text, "<memory>"))
+			w(`{"type":"assistant","message":{"id":"e2","content":[{"type":"text","text":` + strconv.Quote(reply) + `}]}}`)
 			w(`{"type":"result","subtype":"success","is_error":false,"duration_ms":12,"total_cost_usd":0}`)
 			continue
 		}

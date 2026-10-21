@@ -416,3 +416,11 @@ body.desk .w-tip { border-radius: 16px; font-family: var(--ui); }
 .q-number { width: 90px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--hair); background: transparent; color: var(--text); font: inherit; outline: none; user-select: text; }
 .q-number:focus { border-color: var(--accent); }
 .q-unit { color: var(--muted); }
+
+/* The prompt enhancer: faint until there is a draft to work on, spinning while it does. */
+.c-enhance { opacity: .45; }
+.c-enhance.ready { opacity: 1; color: var(--accent); }
+.c-enhance.working { opacity: 1; color: var(--accent); pointer-events: none; }
+.c-enhance.working .mdl { animation: enhanceSpin 1.1s linear infinite; }
+@keyframes enhanceSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .c-enhance.working .mdl { animation: none; } }

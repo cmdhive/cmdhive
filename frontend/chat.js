@@ -45,6 +45,7 @@ function createChat(tab) {
         <button class="cbtn c-browser" title="Show the AI's browser window" hidden><span class="mdl">&#xE774;</span></button>
         <button class="cbtn c-mcp" title="MCP servers"><span class="mdl">&#xE71B;</span></button>
         <button class="c-model" title="Switch model"><span class="cm-dot"></span><span class="cm-name">Default</span><span class="mdl small">&#xE70D;</span></button>
+        <button class="cbtn c-enhance" title="Enhance prompt: a separate AI rewrites what you typed, with your memory as context"><span class="mdl">&#xE945;</span></button>
         <button class="cbtn c-attach" title="Attach files (Ctrl+Shift+O)"><span class="mdl">&#xE723;</span></button>
         <button class="cbtn c-send" title="Send (Enter)"><span class="mdl">&#xE724;</span></button>
       </div>
@@ -73,11 +74,13 @@ function createChat(tab) {
   }, { passive: true });
   c.jump.addEventListener("click", () => { c.stick = true; scrollEnd(c, true); c.jump.hidden = true; });
 
-  c.ta.addEventListener("input", () => { autosize(c.ta); updatePalette(tab); saveDraft(tab); });
+  c.ta.addEventListener("input", () => { autosize(c.ta); updatePalette(tab); saveDraft(tab); enhanceReady(c); });
+  c.ta.addEventListener("focus", () => enhanceReady(c));
   c.ta.addEventListener("keydown", (e) => composerKey(e, tab));
   c.ta.addEventListener("paste", (e) => pasteEvent(e, tab), true);
   root.querySelector(".c-send").addEventListener("click", () => submit(tab));
   root.querySelector(".c-attach").addEventListener("click", attach);
+  root.querySelector(".c-enhance").addEventListener("click", () => enhance(tab));
   root.querySelector(".sl-folder").addEventListener("click", () => changeFolder(tab));
   root.querySelector(".c-model").addEventListener("click", (e) => { e.stopPropagation(); $("#menu").hidden ? modelMenu(tab) : hideMenu(); });
   root.querySelector(".c-mcp").addEventListener("click", (e) => { e.stopPropagation(); const pop = $("#modelpop"); pop.hidden || pop.kind !== "mcp" ? mcpPop(tab) : closeModelPop(); });
@@ -940,7 +943,7 @@ function chatLoading(tab, on, size) {
     c.loadingEl.querySelector("span").textContent = size ? fmtBytes(size) + (size >= 100 * 1024 * 1024 ? " · this one is big, it can take a moment" : "") : "";
     c.root.append(c.loadingEl);
   }
-  for (const sel of [".c-send", ".c-model", ".c-mcp", ".c-attach"]) c.root.querySelector(sel).disabled = on || !!c.reading;
+  for (const sel of [".c-send", ".c-model", ".c-mcp", ".c-attach", ".c-enhance"]) c.root.querySelector(sel).disabled = on || !!c.reading;
   c.ta.disabled = on;
   if (!on && tab.id === active) c.ta.focus();
   renderStatus(tab);
@@ -1456,6 +1459,49 @@ async function setModel(tab, id, name) {
 function saveDraft(tab) {
   clearTimeout(tab.chat.draftTimer);
   tab.chat.draftTimer = setTimeout(() => API().SetDraft?.(tab.id, tab.chat.ta.value), 400);
+}
+
+// ---- prompt enhancer ------------------------------------------------------------
+// A separate AI rewrites the draft (enhance.go); the user still sends it.
+
+// enhanceable: enough of a draft to work with (the same rule as enhance.go).
+const enhanceable = (text) => { const t = text.trim(); return t.length >= 8 && t.split(/\s+/).length >= 2; };
+
+function enhanceReady(c) {
+  c.root.querySelector(".c-enhance").classList.toggle("ready", enhanceable(c.ta.value));
+}
+
+async function enhance(tab) {
+  const c = tab.chat, btn = c.root.querySelector(".c-enhance");
+  if (btn.classList.contains("working")) return;
+  const draft = c.ta.value;
+  if (!enhanceable(draft)) { toast("Type a bit more first: the enhancer needs something to work with.", 3500); c.ta.focus(); return; }
+  btn.classList.add("working");
+  btn.title = "Enhancing your prompt…";
+  c.ta.readOnly = true;
+  try {
+    const better = await API().EnhancePrompt(tab.id, draft);
+    if (c.ta.value !== draft) return; // changed meanwhile: leave the user's text alone
+    if (better && better.trim() !== draft.trim()) {
+      c.ta.readOnly = false;
+      c.ta.focus();
+      c.ta.select();
+      // insertText keeps Ctrl+Z: one undo brings the original back.
+      if (!document.execCommand("insertText", false, better)) c.ta.value = better;
+      autosize(c.ta);
+      saveDraft(tab);
+      toast("Prompt enhanced. Enter to send it, Ctrl+Z for your original.", 3500);
+    } else {
+      toast("Your prompt was already clear; nothing to change.", 3000);
+    }
+  } catch (err) {
+    toast(String(err?.message || err).replace(/^Error:\s*/, ""), 5000);
+  } finally {
+    c.ta.readOnly = false;
+    btn.classList.remove("working");
+    btn.title = "Enhance prompt: a separate AI rewrites what you typed, with your memory as context";
+    enhanceReady(c);
+  }
 }
 
 function autosize(ta) {

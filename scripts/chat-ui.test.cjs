@@ -584,6 +584,24 @@ const assert = require("node:assert/strict");
     assert.match(await page.locator(".su-next").textContent(), /Start using Cmdhive/);
     await page.click(".su-next");
     await page.evaluate(() => setupDone);
+    // ---- prompt enhancer: faint until there is a draft, then swaps it for the better one, undoably.
+    await page.evaluate(() => {
+      window.enhanced = null;
+      go.main.App.EnhancePrompt = async (id, draft) => { enhanced = draft; return "Fix the expired-token bug in src/auth.ts and add a test for it."; };
+      const c = tabs.get(1).chat;
+      c.ta.value = ""; c.ta.dispatchEvent(new Event("input"));
+    });
+    assert.equal(await page.locator(".c-enhance.ready").count(), 0, "the enhancer is faint with nothing typed");
+    await page.fill(".composer textarea", "fix the login bug");
+    assert.equal(await page.locator(".c-enhance.ready").count(), 1, "and ready once there is a draft");
+    await page.click(".c-enhance");
+    await page.waitForFunction(() => tabs.get(1).chat.ta.value.startsWith("Fix the expired-token"));
+    assert.equal(await page.evaluate(() => enhanced), "fix the login bug", "the draft is what gets enhanced");
+    await page.focus(".composer textarea");
+    await page.keyboard.press("Control+z");
+    assert.equal(await page.locator(".composer textarea").inputValue(), "fix the login bug", "Ctrl+Z brings the original back");
+    await page.evaluate(() => { const c = tabs.get(1).chat; c.ta.value = ""; c.ta.dispatchEvent(new Event("input")); });
+
     // ---- device connector: the dropdown that shares memory between computers.
     await page.evaluate(() => {
       window.connected = null; window.forgot = null; window.renamed = null;
@@ -634,7 +652,7 @@ const assert = require("node:assert/strict");
     assert.equal(await page.locator("#cinput:visible").count(), 0, "the input goes away again");
 
     assert.deepEqual(errors, []);
-    console.log("Chat UI: focus, selection, controls, handover progress, Escape, model display, tab keys, tray panel, MCP list, rules editor, tool installs, and the device connector passed.");
+    console.log("Chat UI: focus, selection, controls, handover progress, Escape, model display, tab keys, tray panel, MCP list, rules editor, tool installs, the device connector, and the prompt enhancer passed.");
   } finally {
     await browser.close();
   }
