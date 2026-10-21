@@ -75,6 +75,28 @@ func fakeClaude() {
 	time.Sleep(60 * time.Second)
 }
 
+// tempRoot is a store folder for a test that runs a real agent. Closing a chat
+// kills its process, and the reader draining the last of its output can still
+// write one file (usage.json) as it goes. That is harmless in a real run, but
+// t.TempDir fails the test if a file reappears while it is deleting, so this
+// retries instead.
+func tempRoot(t *testing.T) string {
+	t.Helper()
+	dir, err := os.MkdirTemp("", "ait-root-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		for i := 0; i < 40; i++ {
+			if os.RemoveAll(dir) == nil {
+				return
+			}
+			time.Sleep(50 * time.Millisecond)
+		}
+	})
+	return dir
+}
+
 // fakeCLI is a real provider whose command is this test binary.
 type fakeCLI struct{ Provider }
 
@@ -213,7 +235,7 @@ func (f fakeChat) Command() []string { return []string{os.Args[0]} }
 // Signing a new account in runs the AI's own sign-in against that account's
 // folder, passes the sign-in page on, and reports success.
 func TestSignInNewAccount(t *testing.T) {
-	root, home := t.TempDir(), t.TempDir()
+	root, home := tempRoot(t), t.TempDir()
 	t.Setenv("AIT_FAKE_CLI", "1")
 	store, _ := newStoreAt(root, home)
 	registry["claude"] = fakeChat{registry["claude"].(*claude)}
@@ -261,7 +283,7 @@ func TestSignInNewAccount(t *testing.T) {
 }
 
 func TestNativeChatRoundTrip(t *testing.T) {
-	root, home, cwd := t.TempDir(), t.TempDir(), t.TempDir()
+	root, home, cwd := tempRoot(t), t.TempDir(), t.TempDir()
 	os.MkdirAll(filepath.Join(home, ".claude"), 0o755)
 	os.WriteFile(filepath.Join(home, ".claude", ".credentials.json"), []byte("{}"), 0o644)
 	b, _ := json.Marshal(Config{Accounts: []Account{{ID: "main", Label: "Main"}}, StartingDir: cwd})
@@ -318,7 +340,7 @@ func TestNativeChatRoundTrip(t *testing.T) {
 }
 
 func TestHandoffContinuesOnNextAccount(t *testing.T) {
-	root, home, cwd := t.TempDir(), t.TempDir(), t.TempDir()
+	root, home, cwd := tempRoot(t), t.TempDir(), t.TempDir()
 	mainDir := filepath.Join(home, ".claude")
 	second := filepath.Join(root, "profiles", "acct-02")
 	for _, d := range []string{mainDir, second} {
@@ -598,7 +620,7 @@ func TestClaudeTrustAnswer(t *testing.T) {
 
 // A prewarmed agent is handed to the first matching tab with what it drew.
 func TestStandbyIsAdopted(t *testing.T) {
-	root, home, cwd := t.TempDir(), t.TempDir(), t.TempDir()
+	root, home, cwd := tempRoot(t), t.TempDir(), t.TempDir()
 	os.MkdirAll(filepath.Join(home, ".claude"), 0o755)
 	os.WriteFile(filepath.Join(home, ".claude", ".credentials.json"), []byte("{}"), 0o644)
 	b, _ := json.Marshal(Config{Accounts: []Account{{ID: "main", Label: "Main"}}, StartingDir: cwd})
