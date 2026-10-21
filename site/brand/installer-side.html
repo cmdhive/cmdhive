@@ -1,0 +1,15 @@
+<!doctype html>
+<!-- The installer's welcome/finish sidebar (build/windows/installer/side.bmp, 164x314). -->
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../brand.css">
+<style>
+  html, body { margin: 0; width: 164px; height: 314px; overflow: hidden; background: linear-gradient(180deg, #18181d, #0d0d0f); }
+  .stage { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+  .comb { position: absolute; inset: 0; mask-image: linear-gradient(180deg, #000, transparent 70%); -webkit-mask-image: linear-gradient(180deg, #000, transparent 70%); }
+  .glow { position: absolute; left: 50%; top: 92px; width: 200px; height: 200px; transform: translateX(-50%); background: radial-gradient(closest-side, rgba(217,119,87,.22), transparent); }
+  img { position: relative; width: 92px; height: 92px; }
+  .wordmark { position: relative; font-size: 30px; color: var(--text); }
+</style></head>
+<body><div class="stage"><div class="comb honeycomb"></div><div class="glow"></div>
+  <img src="../logo.svg" alt=""><div class="wordmark">Cmd<span class="hive">hive</span></div>
+</div></body></html>
