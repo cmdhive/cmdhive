@@ -616,7 +616,7 @@ function askCard(tab, e) {
   const el = document.createElement("div");
   el.className = "askcard anim";
   el.innerHTML = `
-    <div class="ak-h"><span class="ak-glyph">${SHIELD}</span><span><b>${esc(profile(tab.profile).name)} ${e.tool === "BrowserHelp" ? "needs your help in the browser" : "wants to " + esc(verbFor(e.tool))}</b><span class="ak-d"></span></span></div>
+    <div class="ak-h"><span class="ak-glyph">${SHIELD}</span><span><b>${esc(profile(tab.profile).name)} ${e.tool === "BrowserHelp" ? "needs your help in the browser" : e.tool === "BrowserSession" ? "is opening a browser" : "wants to " + esc(verbFor(e.tool))}</b><span class="ak-d"></span></span></div>
     <div class="ak-body"></div>
     <div class="ak-act">
       <button class="btn go" data-d="allow">${esc(e.labels?.allow || "Allow")} <kbd>1</kbd></button>

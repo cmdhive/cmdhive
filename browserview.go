@@ -447,8 +447,11 @@ func (a *App) browserEnsureView(l *browserLog) error {
 	if l.view != nil {
 		return nil
 	}
-	dir, temp := filepath.Join(a.store.browserDir(), "profile"), false
-	if !a.store.Config().BrowserKeep || a.profileBusy() {
+	// The user chose this when the browser was first opened (browserChooseMode).
+	// One signed-in profile can serve one window at a time, so a second chat
+	// that wants it gets a private one instead.
+	dir, temp := a.store.browserProfileDir(), false
+	if a.browserModeOf(l) != browserKeep || a.profileBusy() {
 		var err error
 		if dir, err = os.MkdirTemp(a.browserTmp(), "view-"); err != nil {
 			return err
@@ -562,6 +565,9 @@ func (a *App) browserStateJSON(l *browserLog, v *browserView) []byte {
 	var asks []ask
 	for _, req := range sortedAsks(a.browser.asks, l.key) {
 		p := a.browser.asks[req]
+		if p.mode {
+			continue // asked before this window existed, and answered in the chat
+		}
 		x := ask{Req: req, Help: p.help, Text: p.message, Always: !p.help}
 		if p.help {
 			x.Labels = map[string]string{"allow": "I'm done", "deny": "Can't do it"}
@@ -570,7 +576,7 @@ func (a *App) browserStateJSON(l *browserLog, v *browserView) []byte {
 		}
 		asks = append(asks, x)
 	}
-	theme := a.browser.theme
+	theme, keep := a.browser.theme, l.mode == browserKeep
 	a.browser.mu.Unlock()
 	v.mu.Lock()
 	url, title := v.url, v.title
@@ -578,7 +584,7 @@ func (a *App) browserStateJSON(l *browserLog, v *browserView) []byte {
 	busy := l.tab != nil && l.tab.working.Load()
 	b, _ := json.Marshal(map[string]any{
 		"ai": l.ai, "url": url, "title": title, "busy": busy, "steps": steps, "asks": asks,
-		"keep": a.store.Config().BrowserKeep, "theme": json.RawMessage(orNull(theme)),
+		"keep": keep, "theme": json.RawMessage(orNull(theme)),
 	})
 	return b
 }

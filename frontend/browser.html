@@ -79,7 +79,7 @@ function update(s) {
   const lock = $(".bw-lock");
   lock.innerHTML = secure ? "&#xE72E;" : "&#xE7BA;";
   lock.classList.toggle("warn", !!s.url && !secure && !/^about:/.test(s.url));
-  $(".bw-foot").textContent = s.keep ? "Logins and cookies are kept between runs (Settings)." : "A private browser: nothing is kept after this chat.";
+  $(".bw-foot").textContent = s.keep ? "You stay signed in here: logins and cookies are kept on this PC (Settings to delete them)." : "A private browser: nothing is kept after this chat.";
 
   const fresh = (s.steps || []).filter((x) => x.seq > seq);
   if (fresh.length) {

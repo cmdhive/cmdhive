@@ -50,6 +50,7 @@ type browserLog struct {
 	steps   []BrowserStep
 	seq     int
 	allowed map[string]bool // sites the user allowed for this chat's browser
+	mode    string          // browserKeep or browserPrivate, the user's answer for this chat (a.browser.mu)
 
 	viewMu sync.Mutex
 	view   *browserView // nil until the AI first uses the browser, and again once it is closed
@@ -60,6 +61,7 @@ type browserAsk struct {
 	n         int // order of asking
 	key, host string
 	help      bool   // the AI asks the user to do a step in the browser (host is empty)
+	mode      bool   // which browser to open: signed in, or private (asked before the window exists)
 	message   string // what the user is asked to do
 	answer    chan string
 }
@@ -137,6 +139,30 @@ func cleanBrowserFiles(dir string) {
 	os.RemoveAll(filepath.Join(dir, "tmp"))
 }
 
+// browserProfileDir is the one profile the signed-in browser keeps: shared by
+// every chat, every account and every AI, so the user stays signed in.
+func (s *Store) browserProfileDir() string { return filepath.Join(s.browserDir(), "profile") }
+
+// forgetBrowserOnExit wipes that profile as Cmdhive closes, when the user asked
+// for it in Settings.
+func (a *App) forgetBrowserOnExit() {
+	if a.store.Config().BrowserForget {
+		os.RemoveAll(a.store.browserProfileDir())
+	}
+}
+
+// browserConfig is what Playwright's server is started with: it drives the
+// window AIT opened, through that window's debugging port.
+func browserConfig(dir string, port int) []byte {
+	cfg, _ := json.Marshal(map[string]any{
+		"browser":   map[string]any{"browserName": "chromium", "cdpEndpoint": fmt.Sprintf("http://127.0.0.1:%d", port)},
+		"outputDir": filepath.Join(dir, "output"),
+		// The gate decides what the AI may open (nothing local unless permissions are off).
+		"allowUnrestrictedFileAccess": true,
+	})
+	return cfg
+}
+
 // browserMcp is the browser server for one launch of a chat, or nil when it
 // is not available or the user switched it off for this AI. The surface
 // itself starts only when the AI first uses the browser.
@@ -148,14 +174,35 @@ func (a *App) browserMcp(t *Tab, p Provider) *McpServer {
 	if err != nil {
 		return nil
 	}
+	dir := a.store.browserDir()
+	gate, _ := browserAssets.ReadFile("browserassets/gate.cjs")
+	gatePath := filepath.Join(dir, "gate.cjs")
+
+	// A relaunch — an account running out, or another AI taking the
+	// conversation over — only replaces the agent. Its browser keeps running,
+	// with its logins, its pages and its steps: a switch the user did not ask
+	// for must not throw their work away. The new agent is handed the same
+	// browser, through the same key and port.
+	if old, _ := t.browserKey.Load().(string); old != "" {
+		if l := a.browserLogFor(old); l != nil {
+			a.browser.mu.Lock()
+			l.ai = p.Name()
+			port := l.port
+			a.browser.mu.Unlock()
+			cfgPath := filepath.Join(dir, "config-"+old+".json")
+			if os.WriteFile(gatePath, gate, 0o644) != nil || os.WriteFile(cfgPath, browserConfig(dir, port), 0o644) != nil {
+				return nil
+			}
+			a.browserPush(l)
+			return &McpServer{Name: browserServer, Command: nodeBinary(),
+				Args: []string{gatePath, "--ait", base, "--key", old, "--cli", a.store.browserCLI(), "--config", cfgPath}}
+		}
+		os.Remove(filepath.Join(dir, "config-"+old+".json")) // its window is already gone
+	}
+
 	port, err := freePort()
 	if err != nil {
 		return nil
-	}
-	dir := a.store.browserDir()
-	if old, _ := t.browserKey.Load().(string); old != "" { // a relaunch: the old surface and log are gone
-		a.closeBrowser(old)
-		os.Remove(filepath.Join(dir, "config-"+old+".json"))
 	}
 	key := newUUID()
 	t.browserKey.Store(key)
@@ -166,16 +213,8 @@ func (a *App) browserMcp(t *Tab, p Provider) *McpServer {
 	a.browser.logs[key] = &browserLog{key: key, tab: t, ai: p.Name(), port: port, allowed: map[string]bool{}}
 	a.browser.mu.Unlock()
 
-	gate, _ := browserAssets.ReadFile("browserassets/gate.cjs")
-	gatePath := filepath.Join(dir, "gate.cjs")
 	cfgPath := filepath.Join(dir, "config-"+key+".json")
-	cfg, _ := json.Marshal(map[string]any{
-		"browser":   map[string]any{"browserName": "chromium", "cdpEndpoint": fmt.Sprintf("http://127.0.0.1:%d", port)},
-		"outputDir": filepath.Join(dir, "output"),
-		// The gate decides what the AI may open (nothing local unless permissions are off).
-		"allowUnrestrictedFileAccess": true,
-	})
-	if os.WriteFile(gatePath, gate, 0o644) != nil || os.WriteFile(cfgPath, cfg, 0o644) != nil {
+	if os.WriteFile(gatePath, gate, 0o644) != nil || os.WriteFile(cfgPath, browserConfig(dir, port), 0o644) != nil {
 		return nil
 	}
 	return &McpServer{Name: browserServer, Command: nodeBinary(),
@@ -346,6 +385,68 @@ func (a *App) browserFrontHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "ok")
 }
 
+// The two browsers the user can be given. The signed-in one keeps a single
+// profile on this PC — shared by every chat, every account and every AI — so
+// sites stay logged in; the private one is thrown away with the chat.
+const (
+	browserKeep    = "keep"
+	browserPrivate = "private"
+)
+
+// browserChooseMode asks which browser this chat gets, before its window is
+// ever opened. The answer holds for the whole chat, so closing the window,
+// reopening it, or switching account does not ask again.
+func (a *App) browserChooseMode(ctx context.Context, l *browserLog) string {
+	h := &a.browser
+	h.mu.Lock()
+	if l.mode != "" {
+		mode := l.mode
+		h.mu.Unlock()
+		return mode
+	}
+	h.nextAsk++
+	req := askPrefix + "mode-" + strconv.Itoa(h.nextAsk)
+	pending := &browserAsk{n: h.nextAsk, key: l.key, mode: true, answer: make(chan string, 1)}
+	if h.asks == nil {
+		h.asks = map[string]*browserAsk{}
+	}
+	h.asks[req] = pending
+	h.mu.Unlock()
+
+	t := l.tab
+	a.chatOut(t, []Ev{{"k": "ask", "req": req, "tool": "BrowserSession",
+		"desc":   "Signed in: the logins and cookies of every site are kept on this PC and reused by every chat, until you delete them in Settings. Private: nothing is kept.",
+		"input":  map[string]any{},
+		"labels": map[string]any{"allow": "Stay signed in", "deny": "Private"}}})
+	a.notifyTab(t, " is opening a browser", "", "Stay signed in, or private?", "")
+	var d string
+	select {
+	case d = <-pending.answer:
+	case <-ctx.Done():
+	case <-time.After(10 * time.Minute):
+	}
+
+	h.mu.Lock()
+	delete(h.asks, req)
+	mode := browserPrivate // no answer: the one that keeps nothing
+	if d == "allow" || d == "always" {
+		mode = browserKeep
+	}
+	l.mode = mode
+	h.mu.Unlock()
+	a.chatOut(t, []Ev{{"k": "askclose", "req": req,
+		"text": map[bool]string{true: "✓ Stays signed in", false: "✓ Private"}[mode == browserKeep]}})
+	a.browserLogStep(l, "do", map[bool]string{true: "Opened the browser you stay signed in on", false: "Opened a private browser"}[mode == browserKeep])
+	return mode
+}
+
+// browserModeOf is this chat's answer, empty until it has been given.
+func (a *App) browserModeOf(l *browserLog) string {
+	a.browser.mu.Lock()
+	defer a.browser.mu.Unlock()
+	return l.mode
+}
+
 // browserOpenHTTP is the gate asking for the surface before the AI's first
 // browser call; it answers once the surface is up.
 func (a *App) browserOpenHTTP(w http.ResponseWriter, r *http.Request) {
@@ -354,6 +455,9 @@ func (a *App) browserOpenHTTP(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	// Which browser this chat gets is the user's call, and is asked before
+	// anything is opened.
+	a.browserChooseMode(r.Context(), l)
 	if err := a.browserEnsureView(l); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -635,7 +739,16 @@ func (a *App) BrowserForget(host string) error {
 
 // BrowserClearData deletes the kept browsing data (cookies, logins, history).
 func (a *App) BrowserClearData() error {
-	return os.RemoveAll(filepath.Join(a.store.browserDir(), "profile"))
+	a.closeBrowsers() // an open window holds the folder, so it cannot be removed
+	var err error
+	for i := 0; i < 20; i++ { // and lets go of it a moment after it closes
+		if err = os.RemoveAll(a.store.browserProfileDir()); err == nil {
+			a.browserNote("the signed-in browser's data was deleted")
+			return nil
+		}
+		time.Sleep(250 * time.Millisecond)
+	}
+	return fmt.Errorf("could not delete it: %w", err)
 }
 
 // BrowserAvailable tells settings whether this PC can give the AIs a browser.

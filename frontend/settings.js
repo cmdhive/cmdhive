@@ -86,9 +86,9 @@ async function openSettings() {
       <section>
         <h4>Browser for the AIs</h4>
         ${browserOk ? `
-        <div class="row"><div><b>Keep browsing sessions</b><span>The AIs' browser keeps its logins and cookies between runs. Off: a fresh private browser every time.</span></div>${toggleCtl("browserKeep", !!s.browserKeep)}</div>
+        <div class="row"><div><b>Delete the signed-in browser's data on close</b><span>When you choose "Stay signed in", the AIs' browser keeps your logins and cookies on this PC, shared by every chat and account. On: they go every time Cmdhive closes.</span></div>
+          <span class="st-btns">${toggleCtl("browserForget", !!s.browserForget)}<button class="btn quiet st-bclear">Delete now</button></span></div>
         <div class="row"><div><b>Sites always allowed</b><span class="st-sites-note">${(s.browserSites || []).length ? "The AIs open these without asking. Click one to ask again." : "None yet: the AIs ask the first time they open each site."}</span></div>
-          <span class="st-btns"><button class="btn quiet st-bclear">Clear browser data</button></span></div>
         <div class="st-sites">${siteChips(s.browserSites)}</div>` : `
         <div class="row"><div><b>Not available</b><span>The AIs' browser needs Node.js on this PC; it sets itself up the first time Cmdhive starts with it.</span></div></div>`}
       </section>
@@ -167,7 +167,8 @@ async function openSettings() {
   API().MemoryFolder().then((d) => { p.querySelector(".st-mem").textContent = d; });
   p.querySelector(".st-memopen").addEventListener("click", () => API().OpenMemory());
   p.querySelector(".st-bclear")?.addEventListener("click", async () => {
-    try { await API().BrowserClearData(); toast("Browser data cleared"); } catch (err) { toast(String(err)); }
+    if (!(await ask("Delete the signed-in browser's data?", "Every site the AIs' browser is signed in to is signed out, on this PC. Open browser windows close. Your own browser is not touched.", "Delete"))) return;
+    try { await API().BrowserClearData(); toast("The signed-in browser's data is gone.", 3000); } catch (err) { toast(String(err), 6000); }
   });
   p.querySelectorAll(".st-site").forEach((b) => b.addEventListener("click", async () => {
     try { await API().BrowserForget(b.dataset.host); } catch (err) { toast(String(err)); return; }

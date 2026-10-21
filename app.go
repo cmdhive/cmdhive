@@ -146,6 +146,7 @@ func (a *App) beforeClose(ctx context.Context) bool {
 func (a *App) shutdown(ctx context.Context) {
 	a.finalTabsSave() // before the tabs are closed below
 	a.closeBrowsers()
+	a.forgetBrowserOnExit()
 	a.killStandby()
 	a.installOnExit()
 	stopTray()

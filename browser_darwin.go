@@ -66,8 +66,11 @@ func (a *App) browserEnsureView(l *browserLog) error {
 	if exe == "" {
 		return errors.New("Cmdhive's browser needs Google Chrome (or Edge, Brave, Chromium) on this Mac")
 	}
-	dir, temp := filepath.Join(a.store.browserDir(), "profile"), false
-	if !a.store.Config().BrowserKeep || a.profileBusy() {
+	// The user chose this when the browser was first opened (browserChooseMode).
+	// One signed-in profile can serve one window at a time, so a second chat
+	// that wants it gets a private one instead.
+	dir, temp := a.store.browserProfileDir(), false
+	if a.browserModeOf(l) != browserKeep || a.profileBusy() {
 		var err error
 		if dir, err = os.MkdirTemp(a.browserTmp(), "view-"); err != nil {
 			return err
