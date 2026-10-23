@@ -104,6 +104,8 @@ type App struct {
 
 	checkNow              chan struct{} // UpdateNudge wakes the update checker (update.go)
 	lastCheck             atomic.Int64
+	naming                atomic.Bool // a "name all chats" pass is running (titles.go)
+	stopNaming            atomic.Bool // asks that pass to stop early
 	updMu                 sync.Mutex
 	prepared, preparedVer string // a verified installer waiting to run (update.go)
 	cols, rows            int    // last terminal size the page reported

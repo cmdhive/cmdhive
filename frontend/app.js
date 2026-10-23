@@ -1034,6 +1034,44 @@ async function toggleHistory() {
   renderHistory();
 }
 
+let naming = false;
+async function nameAll() {
+  const b = $("#hname");
+  if (naming) { API().StopNaming(); return; }
+  naming = true;
+  b.classList.add("busy");
+  b.querySelector(".t").textContent = "Stop";
+  try { await API().NameAllChats(); }
+  catch (err) { toast(String(err)); endNaming(); }
+}
+function endNaming() {
+  naming = false;
+  const b = $("#hname");
+  b.classList.remove("busy");
+  b.querySelector(".t").textContent = "Name all";
+}
+
+async function cleanUp() {
+  const b = $("#hclean");
+  b.classList.add("busy");
+  let empties = [];
+  try { empties = await API().EmptyChats(); }
+  catch (err) { toast(String(err)); b.classList.remove("busy"); return; }
+  b.classList.remove("busy");
+  if (!empties.length) { toast("No empty chats to clean up."); return; }
+  const sample = empties.slice(0, 12).map((c) => "• " + (c.title || "Untitled")).join("\n");
+  const more = empties.length > 12 ? `\n…and ${empties.length - 12} more` : "";
+  if (!(await ask(`Delete ${empties.length} empty chat${empties.length === 1 ? "" : "s"}?`,
+    `These got no reply — opened or typed into, nothing came back. Removed for good on this PC:\n\n${sample}${more}`,
+    "Delete"))) return;
+  try { await API().DeleteChats(empties.map((c) => c.ref)); }
+  catch (err) { toast(String(err)); }
+  const gone = new Set(empties.map((c) => c.ref));
+  hItems = hItems.filter((x) => !gone.has(x.ref));
+  renderHistory();
+  toast(`Deleted ${empties.length} empty chat${empties.length === 1 ? "" : "s"}.`);
+}
+
 function closeHistory() {
   $("#historyPanel").hidden = true;
   $("#scrim").hidden = $("#confirm").hidden;
@@ -1352,6 +1390,8 @@ async function boot() {
   RT().EventsOn("review:error", (id, message) => { const t = tabs.get(id); if (t?.native) reviewState(t, "error", "", message); });
   RT().EventsOn("tab:notice", (id, text) => { toast(text); updateChrome(); });
   RT().EventsOn("history:changed", async () => { if (!$("#historyPanel").hidden) { hItems = await API().History(); renderHistory(); } });
+  RT().EventsOn("names:progress", (p) => { const b = $("#hname"); if (naming && p) b.querySelector(".t").textContent = `Stop (${p.done}/${p.total})`; });
+  RT().EventsOn("names:done", async (p) => { endNaming(); if (!$("#historyPanel").hidden) { hItems = await API().History(); renderHistory(); } if (p) toast(`Named ${p.named} chat${p.named === 1 ? "" : "s"}.`); });
   RT().EventsOn("app:close-requested", confirmQuit);
   RT().EventsOn("tray:open", (on) => { trayOpen = on; trayPush(); });
   RT().EventsOn("tray:settings", openSettings);
@@ -1396,6 +1436,8 @@ async function boot() {
   $("#cno").addEventListener("click", () => settle(false));
   $("#calt").addEventListener("click", () => settle("alt"));
 
+  $("#hname").addEventListener("click", nameAll);
+  $("#hclean").addEventListener("click", cleanUp);
   $("#hq").addEventListener("input", () => { hSel = 0; renderHistory(); });
   $("#hq").addEventListener("keydown", (e) => {
     const list = $("#hlist").list || [];

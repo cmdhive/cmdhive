@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -41,6 +43,180 @@ func (s *Store) SetTitle(key, title string) {
 }
 
 func titleKey(providerID, sessionID string) string { return providerID + "/" + sessionID }
+
+// NameAllChats has the cheapest Claude model (Haiku) read every past
+// conversation that has no AI name yet and write it one, in the background. A
+// chat already named is skipped, so the pass is cheap to re-run. Progress and
+// the finished count come back as events; it stops early on StopNaming.
+func (a *App) NameAllChats() error {
+	cl := registry["claude"]
+	if cl == nil || chatOf(cl) == nil {
+		return errors.New("Claude is needed to name chats with Haiku")
+	}
+	acct, ok := a.store.Pick("claude", "", time.Now())
+	if !ok {
+		return errors.New("No Claude account has usage left right now")
+	}
+	if !a.naming.CompareAndSwap(false, true) {
+		return errors.New("Already naming chats")
+	}
+	a.stopNaming.Store(false)
+
+	// Which conversations still need a name (newest copy of each).
+	type job struct{ path, key string }
+	var jobs []job
+	seen := map[string]bool{}
+	homes := map[string]bool{}
+	for _, ac := range a.store.Config().Accounts {
+		home := a.store.Home(ac)
+		if home == "" || homes[strings.ToLower(home)] {
+			continue
+		}
+		homes[strings.ToLower(home)] = true
+		for _, ch := range ac.provider().Chats(home) {
+			key := ch.Provider + "/" + ch.ID
+			if seen[key] {
+				continue
+			}
+			seen[key] = true
+			if _, done := a.store.Title(key); done {
+				continue
+			}
+			jobs = append(jobs, job{ch.Path, key})
+		}
+	}
+
+	go func() {
+		defer a.naming.Store(false)
+		model := ptr(cheapestModel(cl))
+		named := 0
+		for i, j := range jobs {
+			if a.stopNaming.Load() {
+				break
+			}
+			a.emit("names:progress", map[string]any{"done": i, "total": len(jobs)})
+			first := firstUserText(j.path)
+			if strings.TrimSpace(first) == "" {
+				a.store.SetTitle(j.key, "") // nothing to name; don't revisit
+				continue
+			}
+			account := acct
+			account.Model = model
+			var extra []string
+			extra = []string{"--strict-mcp-config"}
+			out, err := a.runHelper(cl, account, a.store.home, "review", extra, titleLimit,
+				titlePrompt(first, ""), func(string) {}, nil)
+			if err != nil {
+				if a.stopNaming.Load() {
+					break
+				}
+				continue // leave it unnamed so a later run can retry
+			}
+			if title := cleanTitleText(out); title != "" {
+				a.store.SetTitle(j.key, title)
+				named++
+				a.emit("history:changed")
+			} else {
+				a.store.SetTitle(j.key, "")
+			}
+		}
+		a.emit("names:done", map[string]any{"named": named, "total": len(jobs)})
+	}()
+	return nil
+}
+
+// StopNaming asks a running NameAllChats pass to stop after the current chat.
+func (a *App) StopNaming() { a.stopNaming.Store(true) }
+
+// nearEmptyMax: a chat bigger than this holds real conversation, so it is never
+// "near-empty" and its transcript is not read to check.
+const nearEmptyMax = 400 << 10
+
+// EmptyChats lists conversations that got no reply — opened or typed into but
+// nothing came back, or abandoned at once. These are the "near-empty" chats the
+// cleanup offers to delete; the user confirms the list before any go.
+func (a *App) EmptyChats() []ChatView {
+	var out []ChatView
+	for _, cv := range a.History() {
+		if cv.Size > nearEmptyMax {
+			continue
+		}
+		if chatReplies(cv.Ref) == 0 {
+			out = append(out, cv)
+		}
+	}
+	return out
+}
+
+// DeleteChats removes several conversations at once (the cleanup's "delete
+// all"). It keeps going past a file that will not delete and reports the first
+// error.
+func (a *App) DeleteChats(refs []string) error {
+	var firstErr error
+	for _, r := range refs {
+		if err := a.DeleteChat(r); err != nil && firstErr == nil {
+			firstErr = err
+		}
+	}
+	return firstErr
+}
+
+// chatReplies counts the assistant's replies near the start of a transcript,
+// across Claude and Codex formats — enough to tell an answered chat from an
+// abandoned one. A near-empty chat fits entirely in this window.
+func chatReplies(path string) int {
+	head := headLines(path, 256<<10, 16<<20)
+	n := 0
+	for _, line := range bytes.Split(head, []byte{'\n'}) {
+		switch {
+		case bytes.Contains(line, []byte(`"type":"assistant"`)) && !bytes.Contains(line, []byte(`"isApiErrorMessage":true`)):
+			n++
+		case bytes.Contains(line, []byte(`"agent_message"`)):
+			n++
+		}
+	}
+	return n
+}
+
+// firstUserText pulls the first thing the user typed from a transcript,
+// across Claude and Codex formats, skipping Cmdhive's own bracketed notes.
+func firstUserText(path string) string {
+	head := headLines(path, 96<<10, 16<<20)
+	for _, line := range bytes.Split(head, []byte{'\n'}) {
+		var l struct {
+			Type    string `json:"type"`
+			IsMeta  bool   `json:"isMeta"`
+			Message struct {
+				Content json.RawMessage `json:"content"`
+			} `json:"message"`
+			Payload struct {
+				Type    string `json:"type"`
+				Message string `json:"message"`
+				Item    struct {
+					Content []struct {
+						Text string `json:"text"`
+					} `json:"content"`
+				} `json:"item"`
+			} `json:"payload"`
+		}
+		if json.Unmarshal(line, &l) != nil {
+			continue
+		}
+		t := ""
+		switch {
+		case l.Type == "user" && !l.IsMeta:
+			t = strings.TrimSpace(contentText(l.Message.Content))
+		case l.Payload.Type == "user_message":
+			t = strings.TrimSpace(l.Payload.Message)
+		case len(l.Payload.Item.Content) > 0:
+			t = strings.TrimSpace(l.Payload.Item.Content[0].Text)
+		}
+		if t != "" && !strings.HasPrefix(t, "<") {
+			return t
+		}
+	}
+	return ""
+}
 
 // cheapestModel is the model to name a chat with: the smallest, cheapest one
 // the AI offers, so titling costs as little as possible. Empty means "use the
