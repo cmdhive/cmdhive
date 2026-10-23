@@ -126,3 +126,21 @@ func (a *App) CancelSignIn() {
 func (a *App) ForgetAccount(acctID string) error {
 	return a.store.RemoveUnused(acctID)
 }
+
+// RemoveAccount deletes an account from Cmdhive even when it is signed in. It
+// refuses while a tab is using it, so a running agent's login is not pulled
+// from under it.
+func (a *App) RemoveAccount(acctID string) error {
+	a.mu.Lock() // lock order is t.mu then a.mu, so collect pointers first
+	var tabs []*Tab
+	for _, t := range a.tabs {
+		tabs = append(tabs, t)
+	}
+	a.mu.Unlock()
+	for _, t := range tabs {
+		if t.acctID() == acctID {
+			return fmt.Errorf("that account is in use in a tab — switch it first")
+		}
+	}
+	return a.store.RemoveAccount(acctID)
+}

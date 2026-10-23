@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -85,6 +86,9 @@ func (a *App) History() []ChatView {
 	}
 	out := make([]ChatView, 0, len(all))
 	for _, ch := range all {
+		if t, ok := a.store.Title(ch.Provider + "/" + ch.ID); ok {
+			ch.Title = t // the AI's name for it wins over the raw first message
+		}
 		title := strings.Join(strings.Fields(handoverTitle(ch.Title)), " ")
 		if len(title) > 140 {
 			title = cutText(title, 140) + "…"
@@ -98,6 +102,47 @@ func (a *App) History() []ChatView {
 		})
 	}
 	return out
+}
+
+// DeleteChat removes a past conversation's transcript so it leaves History and
+// stops taking up space. A conversation carried between accounts has a copy in
+// each account's home; ref points at the newest, and every copy of the same
+// conversation goes with it.
+func (a *App) DeleteChat(ref string) error {
+	if ref == "" {
+		return errors.New("no conversation to delete")
+	}
+	groups := map[string][]string{}
+	key := ""
+	homes := map[string]bool{}
+	for _, acct := range a.store.Config().Accounts {
+		home := a.store.Home(acct)
+		if home == "" || homes[strings.ToLower(home)] {
+			continue
+		}
+		homes[strings.ToLower(home)] = true
+		for _, ch := range acct.provider().Chats(home) {
+			k := ch.Provider + "/" + ch.ID
+			groups[k] = append(groups[k], ch.Path)
+			if strings.EqualFold(ch.Path, ref) {
+				key = k
+			}
+		}
+	}
+	paths := []string{ref} // not in any listing: delete just the file named
+	if key != "" {
+		paths = groups[key]
+	}
+	var firstErr error
+	for _, p := range paths {
+		if err := os.Remove(p); err != nil && !os.IsNotExist(err) && firstErr == nil {
+			firstErr = err
+		}
+		chatCache.Lock()
+		delete(chatCache.m, p)
+		chatCache.Unlock()
+	}
+	return firstErr
 }
 
 // ---- attachments ----------------------------------------------------------------

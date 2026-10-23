@@ -4,10 +4,21 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"sort"
 	"time"
 )
+
+// signedOutErrorRe matches an agent's live error that means its sign-in is no
+// longer usable — a revoked or expired token, a 401, "sign in again" — as
+// opposed to a usage limit. Used to flip an account to "signed out" the moment
+// it fails, so a dead login stops being offered as "signed in".
+var signedOutErrorRe = regexp.MustCompile(`(?i)log ?in again|logged out|unauthori[sz]ed|\b401\b|sign in again|refresh token|authentication_failed|not authenticated`)
+
+func isSignedOutError(text string) bool {
+	return text != "" && signedOutErrorRe.MatchString(text)
+}
 
 // Provider is everything Cmdhive knows about one AI command-line agent. The
 // rest of Cmdhive — accounts, tabs, the handoff, history, the UI — only ever

@@ -63,6 +63,7 @@ type Config struct {
 	DeviceName     string              `json:"deviceName,omitempty"`    // what this device is called; "" = the computer's name
 	SyncDir        string              `json:"syncDir,omitempty"`       // folder the devices share their memory through; "" = not connected
 	ForgotDevices  []string            `json:"forgotDevices,omitempty"`
+	HiddenMains    []string            `json:"hiddenMains,omitempty"` // provider ids whose main login the user removed; kept out of addMainLogins
 }
 
 func (c Config) aiOrder() []string {
@@ -90,9 +91,10 @@ type Store struct {
 	root string // %APPDATA%\AIT (dataFolder)
 	home string // user profile
 
-	mu    sync.Mutex
-	state map[string]*acctState
-	quota map[string]Quota // latest usage reading per account (chat.go)
+	mu     sync.Mutex
+	state  map[string]*acctState
+	quota  map[string]Quota  // latest usage reading per account (chat.go)
+	titles map[string]string // AI-written chat titles, by "provider/id" (titles.go)
 }
 
 func NewStore() (*Store, error) {
@@ -144,6 +146,9 @@ func newStoreAt(root, home string) (*Store, error) {
 	}
 	if b, err := os.ReadFile(s.quotaPath()); err == nil {
 		json.Unmarshal(b, &s.quota)
+	}
+	if b, err := os.ReadFile(s.titlesPath()); err == nil {
+		json.Unmarshal(b, &s.titles)
 	}
 	if !fileExists(s.configPath()) {
 		s.firstRun()
@@ -383,6 +388,44 @@ func (s *Store) RemoveUnused(id string) error {
 	return nil
 }
 
+// RemoveAccount deletes an account from Cmdhive whether or not it is signed in.
+// A Cmdhive-created profile has its own login folder, which goes with it. A
+// main login shares the real CLI's home, so its credentials are left alone; it
+// is instead kept out of the list (HiddenMains) so it is not re-added on the
+// next launch. The account in use by a running tab is the caller's to avoid.
+func (s *Store) RemoveAccount(id string) error {
+	s.mu.Lock()
+	c := s.Config()
+	var removed *Account
+	for i := range c.Accounts {
+		if c.Accounts[i].ID == id {
+			a := c.Accounts[i]
+			removed = &a
+			c.Accounts = append(c.Accounts[:i], c.Accounts[i+1:]...)
+			break
+		}
+	}
+	if removed == nil {
+		s.mu.Unlock()
+		return nil
+	}
+	if removed.Dir == "" { // a main login: don't re-add it, but keep the real CLI's login
+		if !slicesContains(c.HiddenMains, removed.Provider) {
+			c.HiddenMains = append(c.HiddenMains, removed.Provider)
+		}
+	}
+	err := s.saveConfig(c)
+	s.mu.Unlock()
+	if err != nil {
+		return err
+	}
+	s.setState(id, acctState{}) // drop any limited/signed-out marker
+	if removed.Dir != "" {
+		return os.RemoveAll(removed.Dir) // the profile's login lives here
+	}
+	return nil
+}
+
 func (s *Store) hasID(c Config, id string) bool {
 	for _, a := range c.Accounts {
 		if a.ID == id {
@@ -405,7 +448,7 @@ func (s *Store) addMainLogins() {
 				has = true
 			}
 		}
-		if has || !p.SignedIn(p.DefaultHome()) {
+		if has || slicesContains(c.HiddenMains, id) || !p.SignedIn(p.DefaultHome()) {
 			continue
 		}
 		acctID := "main"

@@ -204,6 +204,10 @@ func (a *App) chatPump(t *Tab, cp ChatProvider, proc *chatProc, st *ChatState, s
 				if !requestReview {
 					errText, _ := e["error"].(string)
 					a.notifyTab(t, " finished", " stopped", text, errText)
+					t.mu.Lock()
+					first := t.firstPrompt
+					t.mu.Unlock()
+					a.maybeTitle(t, first, strings.TrimSpace(lastText)) // name the chat once it has a real exchange
 				}
 			case "question":
 				qs, _ := e["questions"].([]map[string]any)
@@ -218,6 +222,10 @@ func (a *App) chatPump(t *Tab, cp ChatProvider, proc *chatProc, st *ChatState, s
 					desc, _ = e["tool"].(string)
 				}
 				a.notifyTab(t, " needs your permission", "", desc, "")
+			case "error":
+				if text, _ := e["text"].(string); isSignedOutError(text) {
+					a.markTabSignedOut(t)
+				}
 			case "quota":
 				a.store.SetQuota(t.acctID(), e)
 			case "init":
@@ -294,6 +302,13 @@ func (t *Tab) acctID() string {
 func (a *App) ChatSend(id int, text string, files []string) error {
 	if t := a.tab(id); t != nil {
 		t.reviewed.Store(false) // a new message from the user may be reviewed again
+		if s := strings.TrimSpace(text); s != "" {
+			t.mu.Lock()
+			if t.firstPrompt == "" {
+				t.firstPrompt = s // the user's opening request, to name the chat by
+			}
+			t.mu.Unlock()
+		}
 	}
 	return a.chatSend(id, text, files)
 }

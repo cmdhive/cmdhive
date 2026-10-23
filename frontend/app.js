@@ -21,6 +21,8 @@ const GLYPH = {
   folder: '<span class="mdl">&#xE8B7;</span>', cloud: '<span class="mdl">&#xE753;</span>',
   refresh: '<span class="mdl">&#xE72C;</span>', open: '<span class="mdl">&#xE8A7;</span>',
   x: '<span class="mdl">&#xE8BB;</span>',
+  trash: '<span class="mdl">&#xE74D;</span>',
+  more: '<span class="mdl">&#xE712;</span>',
 };
 const icon = (id) => ICONS[id] || ICONS.agent;
 let APP_VERSION = "";
@@ -140,7 +142,7 @@ async function openChatTab(prof, extra) {
   const pane = document.createElement("div");
   pane.className = "pane";
   $("#panes").append(pane);
-  const tab = { id, profile: prof.id, agent: true, native: true, term: null, pane, title: prof.name, account: "", exited: false, el: null };
+  const tab = { id, profile: prof.id, agent: true, native: true, term: null, pane, title: prof.name, account: "", exited: false, el: null, ref: extra.chat || "" };
   tabs.set(id, tab);
   order.push(id);
   tab.el = makeTabEl(tab);
@@ -603,6 +605,7 @@ function showMenu(anchor, items, alignRight, above) {
         e.stopPropagation(); zoom(+z.dataset.z); b.querySelector("b").textContent = zoomPct();
       }));
     } else b.addEventListener("click", () => { hideMenu(); it.run?.(); });
+    it.wire?.(b);
     m.append(b);
   }
   m.hidden = false;
@@ -657,12 +660,13 @@ async function accountMenu() {
     const chip = a.status === "ready" ? (a.current ? "in use" : "ready") : a.detail || a.status;
     items.push({
       cls: a.current ? "current" : "",
-      html: `<span class="radio"></span><span class="icon">${icon(a.provider)}</span><span class="label">${esc(a.label)}<span class="sub">${esc(a.email || (a.status === "signed out" ? "not signed in" : "signed in"))}${a.hasQuota ? ` · 5h ${Math.round(a.five * 100)}% · week ${Math.round(a.week * 100)}%` : ""}</span>${a.hasQuota ? `<span class="qbar"><i style="width:${Math.min(100, Math.round(a.five * 100))}%"></i></span>` : ""}</span><span class="chip ${a.status === "ready" ? "ready" : a.status === "limited" ? "limited" : ""}">${esc(chip)}</span>`,
-      run: async () => {
+      html: `<span class="radio"></span><span class="icon">${icon(a.provider)}</span><span class="label">${esc(a.label)}<span class="sub">${esc(a.email || (a.status === "signed out" ? "not signed in" : "signed in"))}${a.hasQuota ? ` · 5h ${Math.round(a.five * 100)}% · week ${Math.round(a.week * 100)}%` : ""}</span>${a.hasQuota ? `<span class="qbar"><i style="width:${Math.min(100, Math.round(a.five * 100))}%"></i></span>` : ""}</span><span class="chip ${a.status === "ready" ? "ready" : a.status === "limited" ? "limited" : ""}">${esc(chip)}</span><span class="acct-more" data-more title="Account options">${GLYPH.more}</span>`,
+      run: () => {
         if (a.current) return;
         if (a.status === "signed out") { signIn(tab, a, false); return; }
-        try { await API().Switch(tab.id, a.id); } catch (err) { toast(String(err)); }
+        API().Switch(tab.id, a.id).catch((err) => toast(String(err)));
       },
+      wire: (b) => b.querySelector("[data-more]")?.addEventListener("click", (e) => { e.stopPropagation(); accountActions(tab, a); }),
     });
   }
   items.push("-", {
@@ -672,6 +676,29 @@ async function accountMenu() {
     html: `<span class="icon">${GLYPH.gear}</span><span class="label">Settings</span>`,
     run: openSettings,
   });
+  showMenu($("#acct"), items, true);
+}
+
+// Per-account options (the ⋯ on a row): sign in again — for when the login
+// still looks valid but isn't (a revoked token) — and remove it outright.
+function accountActions(tab, a) {
+  const items = [{ header: a.label }, {
+    html: `<span class="icon">${GLYPH.refresh}</span><span class="label">Sign in again<span class="sub">Fixes a login that stopped working</span></span>`,
+    run: () => signIn(tab, a, false),
+  }];
+  if (!a.current) {
+    items.push("-", {
+      cls: "danger",
+      html: `<span class="icon">${GLYPH.trash}</span><span class="label">Remove account<span class="sub">Take it off this PC</span></span>`,
+      run: async () => {
+        if (!(await ask("Remove this account?",
+          `${a.label} is removed from Cmdhive on this PC. You can add it again later by signing in.`,
+          "Remove"))) return;
+        try { await API().RemoveAccount(a.id); } catch (err) { toast(String(err)); return; }
+        accountMenu();
+      },
+    });
+  }
   showMenu($("#acct"), items, true);
 }
 
@@ -1037,8 +1064,9 @@ function renderHistory() {
     if (i >= important.length && g !== group) { group = g; box.insertAdjacentHTML("beforeend", `<div class="hgroup">${g}</div>`); }
     const b = document.createElement("button");
     b.className = "hrow" + (i === hSel ? " sel" : "");
-    b.innerHTML = `<span class="icon">${icon(c.provider)}</span><span class="t"><b>${esc(c.title)}</b><span>${esc(c.providerName)} · ${esc(c.folder || "")}</span></span><span class="size">${c.size ? fmtBytes(c.size) : ""}</span><span class="when">${when(c.updated)}</span>`;
+    b.innerHTML = `<span class="icon">${icon(c.provider)}</span><span class="t"><b>${esc(c.title)}</b><span>${esc(c.providerName)} · ${esc(c.folder || "")}</span></span><span class="size">${c.size ? fmtBytes(c.size) : ""}</span><span class="when">${when(c.updated)}</span><span class="del" title="Delete this conversation">${GLYPH.trash}</span>`;
     b.addEventListener("click", () => resumeChat(c));
+    b.querySelector(".del").addEventListener("click", (e) => { e.stopPropagation(); deleteChat(c); });
     b.addEventListener("mousemove", () => { if (hSel !== i) { hSel = i; markSel(); } });
     box.append(b);
   });
@@ -1072,6 +1100,21 @@ async function reopenTabs() {
   }
   if (front) activate(front.id);
   return starting.length > 0;
+}
+
+async function deleteChat(c) {
+  const open = [...tabs.values()].some((t) => t.chat && t.ref === c.ref);
+  if (!(await ask("Delete this conversation?",
+    `"${c.title}" and its copies on other accounts are removed from this PC for good.${open ? " It is open in a tab right now." : ""}`,
+    "Delete"))) return;
+  try {
+    await API().DeleteChat(c.ref);
+  } catch (err) {
+    toast("Couldn't delete: " + err);
+    return;
+  }
+  hItems = hItems.filter((x) => x.ref !== c.ref);
+  renderHistory();
 }
 
 async function resumeChat(c) {
@@ -1308,6 +1351,7 @@ async function boot() {
   RT().EventsOn("mcpfix:done", (id, name, fixed, summary) => { const t = tabs.get(id); if (t?.native) mcpFixDone(t, name, fixed, summary); });
   RT().EventsOn("review:error", (id, message) => { const t = tabs.get(id); if (t?.native) reviewState(t, "error", "", message); });
   RT().EventsOn("tab:notice", (id, text) => { toast(text); updateChrome(); });
+  RT().EventsOn("history:changed", async () => { if (!$("#historyPanel").hidden) { hItems = await API().History(); renderHistory(); } });
   RT().EventsOn("app:close-requested", confirmQuit);
   RT().EventsOn("tray:open", (on) => { trayOpen = on; trayPush(); });
   RT().EventsOn("tray:settings", openSettings);

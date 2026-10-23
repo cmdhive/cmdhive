@@ -144,6 +144,9 @@ input { font: inherit; color: inherit; }
 .mi .radio { width: 16px; height: 16px; flex: none; border-radius: 50%; border: 1px solid #6a6a6a; display: grid; place-items: center; }
 .mi.current .radio { border-color: var(--accent); }
 .mi.current .radio::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.mi .acct-more { width: 22px; height: 22px; flex: none; display: grid; place-items: center; border-radius: 4px; color: var(--muted); margin: -2px -4px -2px 2px; }
+.mi .acct-more .mdl { font-size: 15px; }
+.mi .acct-more:hover { background: var(--flyout-hover); color: var(--text); }
 .mh { padding: 8px 10px 4px; color: var(--muted); font-size: 11px; }
 .sep { height: 1px; background: var(--flyout-line); margin: 4px 0; }
 
@@ -172,6 +175,10 @@ input { font: inherit; color: inherit; }
 .hrow .t b { display: block; font-weight: 500; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
 .hrow .t span { display: block; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
 .hrow .when { font-size: 11px; color: var(--faint); white-space: nowrap; }
+.hrow .del { width: 20px; flex: none; display: grid; place-items: center; border-radius: 4px; color: var(--faint); opacity: 0; cursor: pointer; }
+.hrow .del .mdl { font-size: 13px; }
+.hrow:hover .del, .hrow.sel .del { opacity: 1; }
+.hrow .del:hover { background: var(--danger, #c0392b); color: #fff; }
 .hempty { padding: 28px 16px; text-align: center; color: var(--muted); }
 
 .dialog { top: 30%; width: min(380px, calc(100vw - 32px)); padding: 20px 22px 18px; }

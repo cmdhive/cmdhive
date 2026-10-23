@@ -28,23 +28,24 @@ type Tab struct {
 	// generation are dropped, so a replaced agent cannot speak over the new one.
 	gen atomic.Int64
 
-	mu         sync.Mutex
-	pty        *PTY
-	cols, rows int
-	closed     bool
-	acct       string    // the account in use
-	session    string    // transcript path being watched
-	draft      string    // unsent text in the page's box, kept with the tabs (tabs.go)
-	priorBytes int64     // transcripts of earlier AIs in this conversation (crossai.go)
-	launchedAt time.Time //
-	trusted    bool      // the user already trusted cwd in this tab
-	model      string    // model chosen in this tab ("" = default); survives handoffs
-	effort     string    // thinking effort chosen in this tab ("" = default); survives handoffs
-	handover   string    // first message for an AI taking over from another (crossai.go)
-	sessionID  string    // id the native chat reported; its transcript may appear later
-	reading    bool      // cross-AI preparation turn; interruption is disabled
-	reviewing  bool      // a second AI is checking the current work
-	wait       *time.Timer
+	mu          sync.Mutex
+	pty         *PTY
+	cols, rows  int
+	closed      bool
+	acct        string    // the account in use
+	session     string    // transcript path being watched
+	draft       string    // unsent text in the page's box, kept with the tabs (tabs.go)
+	priorBytes  int64     // transcripts of earlier AIs in this conversation (crossai.go)
+	launchedAt  time.Time //
+	trusted     bool      // the user already trusted cwd in this tab
+	model       string    // model chosen in this tab ("" = default); survives handoffs
+	effort      string    // thinking effort chosen in this tab ("" = default); survives handoffs
+	handover    string    // first message for an AI taking over from another (crossai.go)
+	firstPrompt string    // the user's opening request, kept to name the chat (titles.go)
+	sessionID   string    // id the native chat reported; its transcript may appear later
+	reading     bool      // cross-AI preparation turn; interruption is disabled
+	reviewing   bool      // a second AI is checking the current work
+	wait        *time.Timer
 
 	// adopted is false while the tab is a prewarmed standby with no id yet;
 	// its output then goes to backlog instead of the page.
@@ -55,6 +56,7 @@ type Tab struct {
 	// reviewed is true once a review ran for the user's latest message
 	// (chat.go): one review per request.
 	reviewed   atomic.Bool
+	titling    atomic.Bool  // a title is being generated for this chat (titles.go)
 	fixing     atomic.Bool  // an MCP server is being fixed (mcpfix.go)
 	browserKey atomic.Value // string: this launch's key in the browser hub (browser.go)
 	backMu     sync.Mutex
@@ -1029,6 +1031,21 @@ func (a *App) claimedByOthers(id int) map[string]bool {
 
 func (a *App) notice(t *Tab, text string) {
 	a.emit("tab:notice", t.id, text)
+}
+
+// markTabSignedOut flips the tab's account to "signed out" after it failed
+// live with a revoked or expired sign-in, so the account menu stops showing it
+// as usable and the user is told to sign in again. A revoked login still has
+// its auth file on disk, so this is the only point it can be noticed.
+func (a *App) markTabSignedOut(t *Tab) {
+	id := t.acctID()
+	if id == "" || a.store.State(id).SignedOut {
+		return
+	}
+	a.store.MarkSignedOut(id)
+	acct, _ := a.store.Account(id)
+	a.emit("tab:account", t.id, acct.Label)
+	a.notice(t, acct.Label+" needs you to sign in again — open it from the account menu.")
 }
 
 // baseEnv is the user's environment minus anything that would make an agent
