@@ -255,6 +255,7 @@
 .sl-seg:not(:empty) ~ .sl-seg:not(:empty)::before, body.desk .sl-seg:not(:empty) ~ .sl-folder:not(:empty)::before { content: "·"; margin: 0 9px 0 3px; color: var(--faint); }
 .sl-seg b { font-weight: 500; color: var(--faint); }
 .sl-seg span { color: var(--muted); font-variant-numeric: tabular-nums; }
+.sl-seg span.warn { color: var(--warn); }
 .sl-seg em { font-style: normal; color: var(--faint); }
 .sl-bar { display: inline-block; width: 46px; height: 4px; border-radius: 2px; background: var(--soft2); overflow: hidden; }
 .sl-bar i { display: block; height: 100%; background: var(--accent); border-radius: 2px; transition: width .6s var(--ease), background .3s; }

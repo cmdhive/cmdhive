@@ -161,6 +161,11 @@ func (a *App) chatPump(t *Tab, cp ChatProvider, proc *chatProc, st *ChatState, s
 		}
 		requestReview := false
 		for _, e := range evs {
+			if e["k"] == "ctx" || e["k"] == "msg" {
+				if n, ok := toInt64(e["ctx"]); ok && n > 0 {
+					t.ctxTokens.Store(n) // what the next cold turn would re-cache
+				}
+			}
 			switch e["k"] {
 			case "msg":
 				if !t.working.Swap(true) {
@@ -279,6 +284,20 @@ func (a *App) chatPump(t *Tab, cp ChatProvider, proc *chatProc, st *ChatState, s
 }
 
 // chatOut sends events to the page, or keeps them while the tab is a standby.
+// toInt64 reads a number out of an event value, which may be an int (control
+// responses) or a float64 (summed from a usage map).
+func toInt64(v any) (int64, bool) {
+	switch n := v.(type) {
+	case int64:
+		return n, true
+	case int:
+		return int64(n), true
+	case float64:
+		return int64(n), true
+	}
+	return 0, false
+}
+
 func (a *App) chatOut(t *Tab, evs []Ev) {
 	t.backMu.Lock()
 	defer t.backMu.Unlock()

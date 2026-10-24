@@ -56,6 +56,7 @@ type Tab struct {
 	// reviewed is true once a review ran for the user's latest message
 	// (chat.go): one review per request.
 	reviewed   atomic.Bool
+	ctxTokens  atomic.Int64 // latest token context the AI reported (for the switch-cost guard)
 	titling    atomic.Bool  // a title is being generated for this chat (titles.go)
 	fixing     atomic.Bool  // an MCP server is being fixed (mcpfix.go)
 	browserKey atomic.Value // string: this launch's key in the browser hub (browser.go)
@@ -132,9 +133,10 @@ func (a *App) startup(ctx context.Context) {
 	go a.browserReap()
 	a.startUpdateChecks()
 	a.startTray()
-	// Warm the history cache once the agent has started; doing it at once
-	// would compete with the agent's own start-up on a small CPU.
-	time.AfterFunc(20*time.Second, func() { a.History() })
+	// Clear out helper transcripts from before they were cleaned up at the
+	// source, then warm the history cache — once the agent has started, so it
+	// does not compete with the agent's own start-up on a small CPU.
+	time.AfterFunc(20*time.Second, func() { a.pruneHelperSessions(); a.History() })
 }
 
 // beforeClose turns every way of closing the window (the X, Alt+F4, the
@@ -667,6 +669,35 @@ func (a *App) launch(t *Tab, acct Account, prompt string) error {
 	return nil
 }
 
+// bigContextTokens is where a conversation is large enough that moving it to
+// another account or AI (a cold cache) re-caches a costly amount — above the
+// standard 200K window, so only long-context chats trip it.
+const bigContextTokens = 200_000
+
+// ContinueAccount moves the conversation to another account of the same AI and
+// continues the interrupted turn. It is the "Continue on X" the switch-cost
+// card offers, for when the user accepts the re-send a limit forced.
+func (a *App) ContinueAccount(tabID int, acctID string) error {
+	t := a.tab(tabID)
+	if t == nil || t.agent == nil {
+		return fmt.Errorf("not an agent tab")
+	}
+	acct, ok := a.store.Account(acctID)
+	if !ok {
+		return fmt.Errorf("no account %q", acctID)
+	}
+	a.store.ClearSignedOut(acctID)
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	if t.closed {
+		return nil
+	}
+	if t.reading {
+		return fmt.Errorf("wait for the conversation handover to finish")
+	}
+	return a.relaunch(t, acct, "continue")
+}
+
 // relaunch replaces the agent process with one on acct, carrying the
 // conversation across. Caller holds t.mu.
 func (a *App) relaunch(t *Tab, to Account, prompt string) error {
@@ -780,7 +811,16 @@ func (a *App) handoff(t *Tab, gen int64, hit *limitHit) {
 	}
 	a.emit("tab:account", t.id, from.Label) // refresh the pill's state
 
+	// A large conversation re-sends its whole context to a cold cache on any
+	// other account or AI — a big, surprising spend. Past this, Cmdhive asks
+	// before switching instead of doing it silently; small chats still flow on.
+	big := t.ctxTokens.Load() >= bigContextTokens
+
 	if next, ok := a.store.Pick(t.profile, from.ID, time.Now()); ok && next.ID != from.ID {
+		if big {
+			a.emit("tab:switchask", t.id, next.ID, next.Label, from.Label, t.ctxTokens.Load())
+			return
+		}
 		if a.relaunch(t, next, "continue") == nil {
 			a.notice(t, fmt.Sprintf("%s %s — continued on %s.", from.Label, why, next.Label))
 		}
@@ -790,7 +830,7 @@ func (a *App) handoff(t *Tab, gen int64, hit *limitHit) {
 	// Every account of this AI is out: another AI may carry on.
 	if mode := a.store.Config().CrossAI; t.native && mode != "off" {
 		if to, acct, ok := a.nextAI(t.profile); ok {
-			if mode == "ask" {
+			if mode == "ask" || big {
 				a.emit("tab:crossask", t.id, to.ID(), to.Name(), t.agent.Name())
 			} else if name := t.agent.Name(); a.crossOver(t, to, acct, "ran out of usage on every account") == nil {
 				a.notice(t, fmt.Sprintf("Every %s account is at its limit — continued on %s.", name, to.Name()))

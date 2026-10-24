@@ -901,6 +901,26 @@ function crossAsk(tab, to, toName, fromName) {
   scrollEnd(c, true);
 }
 
+// A same-AI account switch is withheld on a big conversation because moving to
+// another account re-sends the whole context to a cold cache — a real spend.
+// The user decides, seeing roughly what it costs.
+function switchAsk(tab, acctID, toLabel, fromLabel, tokens) {
+  const c = tab.chat;
+  const el = document.createElement("div");
+  el.className = "askcard cross anim";
+  const cost = tokens ? ` — about ${fmtNum(tokens)} tokens` : "";
+  el.innerHTML = `
+    <div class="ak-h"><span class="ak-glyph">${icon(tab.profile)}</span><span><b>${esc(fromLabel)} hit its limit on a large conversation</b><span class="ak-d">Continuing on ${esc(toLabel)} re-sends the whole conversation to it${cost}, because each account caches separately. Small chats switch on their own; this one is big enough to ask first.</span></span></div>
+    <div class="ak-act"><button class="btn go">Continue on ${esc(toLabel)}</button><button class="btn quiet">Wait for ${esc(fromLabel)}</button></div>`;
+  el.querySelector(".go").addEventListener("click", async () => {
+    el.querySelector(".ak-act").innerHTML = '<span class="ak-res">Moving the conversation…</span>';
+    try { await API().ContinueAccount(tab.id, acctID); } catch (err) { toast(String(err)); }
+  });
+  el.querySelector(".quiet").addEventListener("click", () => { el.querySelector(".ak-act").innerHTML = `<span class="ak-res">Waiting for ${esc(fromLabel)} to reset</span>`; });
+  c.thread.append(el);
+  scrollEnd(c, true);
+}
+
 // The tab now runs another AI: same thread, new agent.
 function chatProvider(tab, id, name, fromName, reason) {
   const c = tab.chat;
@@ -1611,8 +1631,9 @@ function renderStatus(tab) {
     q?.five !== undefined ? `${tab.account}: ${pct(q.five)} of the 5-hour usage window used${q.fiveReset ? ", resets at " + clockText(q.fiveReset) : ""}` : "");
   seg(".sl-week", q?.week !== undefined ? `<b>week</b><span>${pct(q.week)}</span>` : "",
     q?.week !== undefined ? `${pct(q.week)} of the weekly limit used${q.weekReset ? ", resets " + dayText(q.weekReset) : ""}` : "");
-  seg(".sl-ctx", c.ctx ? `<b>ctx</b>${c.window ? meter(c.ctx / c.window, 0.8) : ""}<span>${fmtNum(c.ctx)}${c.window ? " / " + fmtNum(c.window) : ""}</span>` : "",
-    c.ctx ? `Token context: ${c.ctx.toLocaleString()} tokens${c.window ? ` of ${c.window.toLocaleString()} (${pct(c.ctx / c.window)}); when it fills, the AI compacts the conversation` : ""}` : "");
+  const bigCtx = c.ctx >= 200000;
+  seg(".sl-ctx", c.ctx ? `<b>ctx</b>${c.window ? meter(c.ctx / c.window, 0.8) : ""}<span class="${bigCtx ? "warn" : ""}">${fmtNum(c.ctx)}${c.window ? " / " + fmtNum(c.window) : ""}</span>` : "",
+    c.ctx ? `Token context: ${c.ctx.toLocaleString()} tokens${c.window ? ` of ${c.window.toLocaleString()} (${pct(c.ctx / c.window)})` : ""}.${bigCtx ? " This is large: after a pause (~1h) or an account/model switch the cache goes cold, so your next message re-sends all of it at full price. Starting a new chat avoids that." : " When it fills, the AI compacts the conversation."}` : "");
   seg(".sl-full", c.bytes ? `<b>full</b><span>${fmtBytes(c.bytes)}</span>` : "",
     c.bytes ? "The whole conversation on disk: every message and tool output, earlier AIs included. Only the token context counts toward the limit." : "");
   seg(".sl-review", reviewOn && c.reviewAvailable ? "<b>review</b><span>on</span>" : "",
