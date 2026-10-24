@@ -1493,6 +1493,25 @@ async function boot() {
   if (!ui.settings.onboarded) await runSetup();
   if (!(await reopenTabs())) await openTab(ui.defaultProfile);
   whatsNew();
+  claudeMdCheck();
+}
+
+// claudeMdCheck surfaces a one-click sanitize for the user's own CLAUDE.md
+// when it has @imports — an imported file whose content trips Claude's
+// classifier otherwise fails every new chat on the main login.
+async function claudeMdCheck() {
+  if (ui.settings?.claudeMdChecked) return; // ask once per install
+  let imports = [];
+  try { imports = (await API().ClaudeMdImports()) || []; } catch { return; }
+  if (!imports.length) return;
+  const list = imports.map((s) => "• " + s).join("\n");
+  const ok = await ask("Your CLAUDE.md imports other files",
+    `Your ~/.claude/CLAUDE.md imports:\n\n${list}\n\nEverything inside those files goes into every new chat's system prompt. If one of them trips Claude's safeguards, every new chat on your main account fails ("reasoning_extraction"). Removing the @import lines fixes it. The original is saved as CLAUDE.md.bak.`,
+    "Remove the imports");
+  try { await API().MarkClaudeMdChecked(); } catch {}
+  if (!ok) return;
+  try { await API().FixMainClaudeMd(); toast("CLAUDE.md fixed. New chats should work.", 6000); }
+  catch (err) { toast("Could not fix: " + err, 7000); }
 }
 
 window.addEventListener("DOMContentLoaded", boot);

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -83,10 +84,11 @@ func (c *claude) Provision(home, cwd string, trusted bool) {
 	}
 	main := c.DefaultHome()
 	os.MkdirAll(home, 0o755)
-	for _, f := range []string{"CLAUDE.md", "settings.json"} {
-		if fileExists(filepath.Join(main, f)) {
-			copyFile(filepath.Join(main, f), filepath.Join(home, f))
-		}
+	if src := filepath.Join(main, "CLAUDE.md"); fileExists(src) {
+		sanitizeClaudeMd(src, filepath.Join(home, "CLAUDE.md"))
+	}
+	if src := filepath.Join(main, "settings.json"); fileExists(src) {
+		copyFile(src, filepath.Join(home, "settings.json"))
 	}
 	for _, d := range []string{"skills", "agents", "commands", "plugins"} {
 		junction(filepath.Join(main, d), filepath.Join(home, d))
@@ -106,6 +108,70 @@ func (c *claude) ShareMemory(home, cwd, shared string) {
 
 // Keys in .claude.json that belong to one login and must never be copied.
 var claudePrivate = regexp.MustCompile(`(?i)oauth|userid|machineid|apikey|cache|subscription|passes|overage|extrausage|grove|s1m|projects`)
+
+// claudeMdImport matches CLAUDE.md's @path import syntax ("@C:/path/file.md",
+// "@./rel.md", …). The imported file goes into every session's system prompt,
+// so a file that trips Anthropic's classifier breaks new chats across every
+// Cmdhive-launched Claude account at once.
+var claudeMdImport = regexp.MustCompile(`(?m)^\s*@\S.*$`)
+
+// sanitizeClaudeMd copies CLAUDE.md to dst with @imports stripped. Those
+// imports are honoured only in the user's own CLAUDE.md; Cmdhive's per-profile
+// copies drop them so one bad imported file does not fail every new chat.
+func sanitizeClaudeMd(src, dst string) error {
+	b, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	cleaned := claudeMdImport.ReplaceAll(b, nil)
+	return os.WriteFile(dst, cleaned, 0o644)
+}
+
+// ClaudeMdImports is the list of @imports in the user's own ~/.claude/CLAUDE.md.
+// A new chat loads them into every session's system prompt, so a file whose
+// content trips Anthropic's classifier means every new chat on the main login
+// fails at once ("Opus 5.5's safeguards flagged this message… reasoning_extraction").
+// The page uses this to offer a one-click fix.
+func (a *App) ClaudeMdImports() []string {
+	c, ok := registry["claude"].(*claude)
+	if !ok {
+		return nil
+	}
+	return claudeMdImports(filepath.Join(c.DefaultHome(), "CLAUDE.md"))
+}
+
+// FixMainClaudeMd strips @imports from the user's own ~/.claude/CLAUDE.md,
+// after saving the original to CLAUDE.md.bak. User's file, so this is
+// opt-in — the page confirms first.
+func (a *App) FixMainClaudeMd() error {
+	c, ok := registry["claude"].(*claude)
+	if !ok {
+		return fmt.Errorf("Claude not available")
+	}
+	p := filepath.Join(c.DefaultHome(), "CLAUDE.md")
+	b, err := os.ReadFile(p)
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(p+".bak", b, 0o644); err != nil {
+		return err
+	}
+	cleaned := claudeMdImport.ReplaceAll(b, nil)
+	return os.WriteFile(p, cleaned, 0o644)
+}
+
+// claudeMdImports returns the @imports found in the file at path, if any.
+func claudeMdImports(path string) []string {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, m := range claudeMdImport.FindAllString(string(b), -1) {
+		out = append(out, strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(m), "@")))
+	}
+	return out
+}
 
 // mirrorState copies the main login's UI state (onboarding done, theme,
 // dismissed notices, MCP servers…) so a secondary account opens straight to

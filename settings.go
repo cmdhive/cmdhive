@@ -9,25 +9,26 @@ import (
 // Settings is what the in-app settings panel edits. Everything else in
 // config.json (accounts, args) stays file-only.
 type Settings struct {
-	Style         string            `json:"style"`         // terminal | desktop
-	Theme         string            `json:"theme"`         // campbell | powershell | custom
-	Custom        map[string]string `json:"custom"`        // bg, fg, accent, panel
-	FontSize      int               `json:"fontSize"`      //
-	ChatView      string            `json:"chatView"`      // native | terminal
-	Permissions   string            `json:"permissions"`   // ask | edits | never
-	AlwaysOnTop   bool              `json:"alwaysOnTop"`   //
-	Prewarm       bool              `json:"prewarm"`       //
-	UserName      string            `json:"userName"`      // what agents call the user
-	Models        map[string]string `json:"models"`        // default model per provider
-	Onboarded     bool              `json:"onboarded"`     //
-	Access        string            `json:"access"`        // everywhere | folder
-	AutoUpdate    bool              `json:"autoUpdate"`    //
-	AutoInstall   bool              `json:"autoInstall"`   //
-	CrossAI       string            `json:"crossAI"`       // switch | ask | off
-	Notify        bool              `json:"notify"`        // Windows notification when the AI is done in the background
-	ReopenTabs    bool              `json:"reopenTabs"`    // reopen last time's tabs at start
-	BrowserForget bool              `json:"browserForget"` // delete the signed-in browser's data when Cmdhive closes
-	BrowserSites  []string          `json:"browserSites"`  // sites the AIs may always open
+	Style           string            `json:"style"`           // terminal | desktop
+	Theme           string            `json:"theme"`           // campbell | powershell | custom
+	Custom          map[string]string `json:"custom"`          // bg, fg, accent, panel
+	FontSize        int               `json:"fontSize"`        //
+	ChatView        string            `json:"chatView"`        // native | terminal
+	Permissions     string            `json:"permissions"`     // ask | edits | never
+	AlwaysOnTop     bool              `json:"alwaysOnTop"`     //
+	Prewarm         bool              `json:"prewarm"`         //
+	UserName        string            `json:"userName"`        // what agents call the user
+	Models          map[string]string `json:"models"`          // default model per provider
+	Onboarded       bool              `json:"onboarded"`       //
+	Access          string            `json:"access"`          // everywhere | folder
+	AutoUpdate      bool              `json:"autoUpdate"`      //
+	AutoInstall     bool              `json:"autoInstall"`     //
+	CrossAI         string            `json:"crossAI"`         // switch | ask | off
+	Notify          bool              `json:"notify"`          // Windows notification when the AI is done in the background
+	ReopenTabs      bool              `json:"reopenTabs"`      // reopen last time's tabs at start
+	BrowserForget   bool              `json:"browserForget"`   // delete the signed-in browser's data when Cmdhive closes
+	BrowserSites    []string          `json:"browserSites"`    // sites the AIs may always open
+	ClaudeMdChecked bool              `json:"claudeMdChecked"` // the "your CLAUDE.md has @imports" dialog has been shown
 }
 
 // AgentStatus is one row of the first-run screen: an agent and whether Cmdhive
@@ -55,7 +56,21 @@ func (a *App) GetSettings() Settings {
 	c := a.store.Config()
 	return Settings{Style: c.Style, Theme: c.Theme, Custom: c.Custom, FontSize: c.FontSize, ChatView: c.ChatView,
 		Permissions: c.Permissions, AlwaysOnTop: c.AlwaysOnTop, Prewarm: c.prewarm(),
-		UserName: c.UserName, Models: c.Models, Onboarded: c.Onboarded, Access: c.Access, AutoUpdate: c.autoUpdate(), AutoInstall: c.AutoInstall, CrossAI: c.CrossAI, Notify: c.notify(), ReopenTabs: c.reopenTabs(), BrowserForget: c.BrowserForget, BrowserSites: append([]string{}, c.BrowserSites...)}
+		UserName: c.UserName, Models: c.Models, Onboarded: c.Onboarded, Access: c.Access, AutoUpdate: c.autoUpdate(), AutoInstall: c.AutoInstall, CrossAI: c.CrossAI, Notify: c.notify(), ReopenTabs: c.reopenTabs(), BrowserForget: c.BrowserForget, BrowserSites: append([]string{}, c.BrowserSites...), ClaudeMdChecked: c.ClaudeMdChecked}
+}
+
+// MarkClaudeMdChecked records that the one-shot "your CLAUDE.md has @imports"
+// dialog has been shown, so it is not shown again regardless of the choice.
+func (a *App) MarkClaudeMdChecked() error {
+	s := a.store
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	c := s.Config()
+	if c.ClaudeMdChecked {
+		return nil
+	}
+	c.ClaudeMdChecked = true
+	return s.saveConfig(c)
 }
 
 // SaveSettings applies what can apply now (always-on-top) and stores the
