@@ -75,13 +75,21 @@ func (a *App) pruneHelperSessions() {
 			continue
 		}
 		homes[strings.ToLower(home)] = true
-		for _, ch := range ac.provider().Chats(home) {
-			if isHelperPrompt(firstUserText(ch.Path)) {
-				os.Remove(ch.Path)
-				chatCache.Lock()
-				delete(chatCache.m, ch.Path)
-				chatCache.Unlock()
-			}
+		// Walk the transcript files directly: Chats() already hides helpers, so
+		// going through it would find nothing to prune.
+		for _, sub := range []string{"projects", "sessions"} {
+			filepath.Walk(filepath.Join(home, sub), func(p string, info os.FileInfo, err error) error {
+				if err != nil || info.IsDir() || !strings.HasSuffix(p, ".jsonl") {
+					return nil
+				}
+				if isHelperPrompt(firstUserText(p)) {
+					os.Remove(p)
+					chatCache.Lock()
+					delete(chatCache.m, p)
+					chatCache.Unlock()
+				}
+				return nil
+			})
 		}
 	}
 }
