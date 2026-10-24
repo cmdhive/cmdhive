@@ -345,6 +345,9 @@ func (c *codex) readChat(p string) (Chat, bool) {
 			break
 		}
 	}
+	if isHelperPrompt(ch.Title) {
+		return ch, false // a Cmdhive helper's throwaway session, not a conversation
+	}
 	return ch, ch.Title != "" && ch.ID != ""
 }
 

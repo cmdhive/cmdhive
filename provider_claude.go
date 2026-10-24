@@ -400,6 +400,9 @@ func (c *claude) readChat(p string) (Chat, bool) {
 			}
 		}
 	}
+	if isHelperPrompt(firstPrompt) {
+		return ch, false // a Cmdhive helper's throwaway session, not a conversation
+	}
 	switch {
 	case custom != "":
 		ch.Title = custom

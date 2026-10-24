@@ -44,6 +44,48 @@ func (s *Store) SetTitle(key, title string) {
 
 func titleKey(providerID, sessionID string) string { return providerID + "/" + sessionID }
 
+// helperPrompts open the throwaway sessions Cmdhive's own helper runs (titling,
+// the enhancer, review, MCP fixing) start. A transcript beginning with one of
+// these is a helper, not a conversation, and is kept out of History.
+var helperPrompts = []string{
+	"Name this conversation with a short, specific title",
+	"You improve prompts.",
+	"You are a second AI reviewing another AI's work.",
+	"You are fixing one MCP server for the user of Cmdhive",
+}
+
+func isHelperPrompt(s string) bool {
+	s = strings.TrimSpace(s)
+	for _, p := range helperPrompts {
+		if strings.HasPrefix(s, p) {
+			return true
+		}
+	}
+	return false
+}
+
+// pruneHelperSessions deletes helper transcripts already written to disk before
+// they were cleaned up at the source — so they stop cluttering History and
+// taking space. Runs once in the background at startup.
+func (a *App) pruneHelperSessions() {
+	homes := map[string]bool{}
+	for _, ac := range a.store.Config().Accounts {
+		home := a.store.Home(ac)
+		if home == "" || homes[strings.ToLower(home)] {
+			continue
+		}
+		homes[strings.ToLower(home)] = true
+		for _, ch := range ac.provider().Chats(home) {
+			if isHelperPrompt(firstUserText(ch.Path)) {
+				os.Remove(ch.Path)
+				chatCache.Lock()
+				delete(chatCache.m, ch.Path)
+				chatCache.Unlock()
+			}
+		}
+	}
+}
+
 // NameAllChats has the cheapest Claude model (Haiku) read every past
 // conversation that has no AI name yet and write it one, in the background. A
 // chat already named is skipped, so the pass is cheap to re-run. Progress and

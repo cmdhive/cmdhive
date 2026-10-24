@@ -163,6 +163,19 @@ func (a *App) runHelper(p Provider, acct Account, cwd, perm string, extra []stri
 		cmd.Env = append(cmd.Env, p.HomeEnv()+"="+acct.Dir)
 	}
 	hideConsole(cmd)
+	// A helper is a throwaway: its own transcript must not show up in History
+	// (it once filled it with "Name this conversation…" prompts) or take disk.
+	// Delete it once the process is gone, after the kill/wait defer below.
+	home := a.store.Home(acct)
+	var sessionFile string
+	defer func() {
+		if sessionFile != "" {
+			os.Remove(sessionFile)
+			chatCache.Lock()
+			delete(chatCache.m, sessionFile)
+			chatCache.Unlock()
+		}
+	}()
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return "", err
@@ -196,6 +209,11 @@ func (a *App) runHelper(p Provider, acct Account, cwd, perm string, extra []stri
 	last := ""
 	for sc.Scan() {
 		for _, e := range cp.ChatDecode(sc.Bytes(), st) {
+			if e["k"] == "init" {
+				if id, _ := e["session"].(string); id != "" {
+					sessionFile = p.SessionFile(home, cwd, id)
+				}
+			}
 			switch e["k"] {
 			case "tool": // what the helper is doing, for its progress
 				name, _ := e["name"].(string)
