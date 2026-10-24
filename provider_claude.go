@@ -160,6 +160,27 @@ func (a *App) FixMainClaudeMd() error {
 	return os.WriteFile(p, cleaned, 0o644)
 }
 
+// sanitizeProfileClaudeMds strips @imports from every account profile's
+// CLAUDE.md under root, in place. Provision does this per profile at launch;
+// this closes the gap for accounts not relaunched since, where a stale import
+// would otherwise keep failing new chats.
+func sanitizeProfileClaudeMds(root string) {
+	dirs, _ := os.ReadDir(filepath.Join(root, "profiles"))
+	for _, d := range dirs {
+		if !d.IsDir() {
+			continue
+		}
+		p := filepath.Join(root, "profiles", d.Name(), "CLAUDE.md")
+		b, err := os.ReadFile(p)
+		if err != nil {
+			continue
+		}
+		if cleaned := claudeMdImport.ReplaceAll(b, nil); len(cleaned) != len(b) {
+			os.WriteFile(p, cleaned, 0o644)
+		}
+	}
+}
+
 // claudeMdImports returns the @imports found in the file at path, if any.
 func claudeMdImports(path string) []string {
 	b, err := os.ReadFile(path)

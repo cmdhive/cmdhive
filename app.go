@@ -126,6 +126,10 @@ func (a *App) startup(ctx context.Context) {
 	if a.store.Config().AlwaysOnTop {
 		runtime.WindowSetAlwaysOnTop(ctx, true)
 	}
+	// Strip @imports from every Claude profile's CLAUDE.md now, before any chat
+	// starts — the per-launch sanitize misses accounts not relaunched since,
+	// leaving a stale import that fails their new chats.
+	sanitizeProfileClaudeMds(a.store.root)
 	// The first agent starts now, while the window is still loading.
 	go a.prepareStandby()
 	go a.browserInstall()

@@ -41,3 +41,24 @@ func TestSanitizeClaudeMdStripsImports(t *testing.T) {
 		t.Fatalf("leading @ import not stripped:\n%s", b)
 	}
 }
+
+// The startup sweep must clean every profile's CLAUDE.md in place, including
+// accounts that were never relaunched since a bad import was added.
+func TestSanitizeProfileClaudeMds(t *testing.T) {
+	root := t.TempDir()
+	for _, name := range []string{"claude-01", "claude-02"} {
+		d := filepath.Join(root, "profiles", name)
+		os.MkdirAll(d, 0o755)
+		os.WriteFile(filepath.Join(d, "CLAUDE.md"), []byte("# rules\n\n@C:/Users/Kaya/.claude/MAIN.md\n"), 0o644)
+	}
+	sanitizeProfileClaudeMds(root)
+	for _, name := range []string{"claude-01", "claude-02"} {
+		b, _ := os.ReadFile(filepath.Join(root, "profiles", name, "CLAUDE.md"))
+		if strings.Contains(string(b), "@C:/Users/Kaya/.claude/MAIN.md") {
+			t.Fatalf("%s still has the import:\n%s", name, b)
+		}
+		if !strings.Contains(string(b), "# rules") {
+			t.Fatalf("%s lost its real content:\n%s", name, b)
+		}
+	}
+}
